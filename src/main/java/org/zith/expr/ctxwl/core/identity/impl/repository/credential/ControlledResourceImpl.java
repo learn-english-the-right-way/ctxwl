@@ -74,8 +74,8 @@ public class ControlledResourceImpl implements ControlledResource {
         authenticationKeyEntity.setKeyUsage(CredentialRepositoryImpl.keyUsageName(keyUsage));
 
         var code = repository.makeEntropicCode(36);
-        authenticationKeyEntity.setCode(BaseEncoding.base64().encode(code));
-        authenticationKeyEntity.setEffectiveCode(code);
+        // TODO deduplicate
+        authenticationKeyEntity.setCode(code);
 
         authenticationKeyEntity.setCreation(repository.timestamp());
 
@@ -116,7 +116,7 @@ public class ControlledResourceImpl implements ControlledResource {
         return entity.getAuthenticationKeys().stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
                 .findAny()
-                .map(e -> repository.makeAuthenticationKey(keyUsage, BaseEncoding.base64().decode(e.getCode())));
+                .map(e -> repository.makeAuthenticationKey(keyUsage, e.getCode()));
     }
 
     public ControlledResourceImpl bind(CredentialRepositoryImpl repository) {

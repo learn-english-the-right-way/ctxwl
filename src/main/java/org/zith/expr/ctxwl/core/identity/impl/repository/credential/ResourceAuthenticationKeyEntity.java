@@ -12,8 +12,7 @@ public class ResourceAuthenticationKeyEntity {
     private Integer id;
     private ResourceEntity resource;
     private String keyUsage;
-    private String code;
-    private byte[] effectiveCode;
+    private byte[] code;
     private Instant creation;
     private Instant expiry;
     private Instant invalidation;
@@ -55,21 +54,12 @@ public class ResourceAuthenticationKeyEntity {
         this.keyUsage = keyUsage;
     }
 
-    @Column(columnDefinition = "text")
-    public String getCode() {
+    public byte[] getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(byte[] code) {
         this.code = code;
-    }
-
-    public byte[] getEffectiveCode() {
-        return effectiveCode;
-    }
-
-    public void setEffectiveCode(byte[] effectiveCode) {
-        this.effectiveCode = effectiveCode;
     }
 
     @Column(columnDefinition = "timestamp with time zone")
