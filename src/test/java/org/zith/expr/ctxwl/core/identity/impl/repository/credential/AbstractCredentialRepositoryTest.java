@@ -38,6 +38,16 @@ class AbstractCredentialRepositoryTest {
         assertNotEquals(key2, key3);
     }
 
+    @Test
+    public void testNoKey() {
+        var repository = new TestableCredentialRepository();
+        var code =
+                "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
+        var key = repository.makeAuthenticationKey(CredentialRepository.KeyUsage.REGISTRATION_CONFIRMATION, code);
+        assertTrue(repository.validateAuthenticationKey(CredentialRepository.KeyUsage.REGISTRATION_CONFIRMATION, key));
+        assertEquals(key, repository.makeAuthenticationKey(CredentialRepository.KeyUsage.REGISTRATION_CONFIRMATION, code));
+    }
+
     private static class TestableCredentialRepository extends AbstractCredentialRepository {
     }
 }

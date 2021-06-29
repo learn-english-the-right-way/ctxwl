@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
+import com.google.common.base.Preconditions;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -18,14 +19,14 @@ import java.util.stream.Stream;
 abstract class AbstractCredentialRepository {
     private final static Pattern PASSWORD_PATTERN = Pattern.compile("^[\\p{ASCII}&&[^\\p{Blank}\\p{Cntrl}]]{8,32}$");
 
-    private MainKeyChain mainKeyChain;
+    private MetaKeyChain metaKeyChain;
 
     protected AbstractCredentialRepository() {
-        mainKeyChain = new MainKeyChain(0, new String[]{});
+        metaKeyChain = new MetaKeyChain(-1, new String[]{""});
     }
 
     void updateKeys(int offset, String[] keys) {
-        mainKeyChain = new MainKeyChain(0, keys);
+        metaKeyChain = new MetaKeyChain(0, keys);
     }
 
     boolean validatePassword(String password) {
@@ -43,7 +44,7 @@ abstract class AbstractCredentialRepository {
     }
 
     String makeAuthenticationKey(CredentialRepository.KeyUsage keyUsage, byte[] code) {
-        var keyType = mainKeyChain.current(keyUsage);
+        var keyType = metaKeyChain.current(keyUsage);
 
         var typeOffset = 4;
         var macOffset = typeOffset + code.length;
@@ -57,7 +58,7 @@ abstract class AbstractCredentialRepository {
 
     boolean validateAuthenticationKey(CredentialRepository.KeyUsage keyUsage, String authenticationKey) {
         byte[] buffer = BaseEncoding.base64().decode(authenticationKey);
-        var hmacs = mainKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsage);
+        var hmacs = metaKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsage);
         return hmacs.stream().anyMatch(hmac -> Arrays.equals(
                 hmac.hashBytes(buffer, 0, buffer.length - 32).asBytes(), 0, 32,
                 buffer, buffer.length - 32, buffer.length));
@@ -72,32 +73,33 @@ abstract class AbstractCredentialRepository {
         };
     }
 
-    private static class MainKeyChain {
+    private static class MetaKeyChain {
         private final List<EnumMap<CredentialRepository.KeyUsage, KeyType>> keyTypes;
         private final Map<Integer, List<KeyType>> typesByCode;
 
-        MainKeyChain(int offset, String[] mainKeys) {
-            this.keyTypes = IntStream.range(0, mainKeys.length)
+        MetaKeyChain(int offset, String[] metaKeys) {
+            Preconditions.checkArgument((offset == -1 && Arrays.equals(metaKeys, new String[]{""})) || offset >= 0);
+            this.keyTypes = IntStream.range(0, metaKeys.length)
                     .boxed()
-                    .map(i -> Map.entry(offset + i, mainKeys[i]))
+                    .map(i -> Map.entry(offset + i, metaKeys[i]))
                     .map(e -> {
                         var serial = e.getKey();
-                        var mainKey = e.getValue();
+                        var metaKey = e.getValue();
                         return new EnumMap<>(Arrays.stream(CredentialRepository.KeyUsage.values())
                                 .map(keyUsage -> {
-                                    var mainKeyName = offset + ":" + mainKey;
+                                    var metaKeyName = offset + ":" + metaKey;
                                     var hmac =
-                                            Hashing.hmacSha256(mainKeyName.getBytes(StandardCharsets.UTF_8));
-                                    var hashCode =
+                                            Hashing.hmacSha256(metaKeyName.getBytes(StandardCharsets.UTF_8));
+                                    var fullCode =
                                             hmac.hashBytes(keyUsageName(keyUsage).getBytes(StandardCharsets.UTF_8))
                                                     .asBytes();
 
                                     var code = Stream.iterate(0, i -> i < 8, i -> i + 4)
                                             .map(i -> Ints.fromBytes(
-                                                    hashCode[i],
-                                                    hashCode[i + 1],
-                                                    hashCode[i + 2],
-                                                    hashCode[i + 3]))
+                                                    fullCode[i],
+                                                    fullCode[i + 1],
+                                                    fullCode[i + 2],
+                                                    fullCode[i + 3]))
                                             .reduce(0, (a, b) -> a ^ b);
                                     return new KeyType(serial, keyUsage, hmac, code);
                                 })
