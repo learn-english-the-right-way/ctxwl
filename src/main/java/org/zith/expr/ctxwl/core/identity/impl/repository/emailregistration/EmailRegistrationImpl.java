@@ -65,7 +65,7 @@ public class EmailRegistrationImpl implements EmailRegistration {
         repository.getSession().persist(entity);
 
         var controlledResource = getControlledResource();
-        controlledResource.setPassword(CredentialManager.KeyUsage.REGISTRATION, password);
+        controlledResource.setPassword(CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL, password);
         controlledResource.ensureAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
     }
 

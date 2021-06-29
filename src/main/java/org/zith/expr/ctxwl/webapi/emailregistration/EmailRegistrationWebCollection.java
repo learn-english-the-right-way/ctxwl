@@ -3,9 +3,10 @@ package org.zith.expr.ctxwl.webapi.emailregistration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.webapi.authentication.LimitedToEmailRegistrant;
 
 import java.util.Optional;
 
@@ -58,6 +59,7 @@ public class EmailRegistrationWebCollection {
 
     @Path("{address}")
     @PATCH
+    @LimitedToEmailRegistrant
     public EmailRegistrationWebDocument update(@PathParam("address") String address, EmailRegistrationWebDocument document) {
         return document;
     }

@@ -1,19 +1,25 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.ControlledResourceName;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ControlledResourceImpl implements ControlledResource {
     private final ResourceEntity entity;
+    private final Supplier<ControlledResourceName> nameTuple = Suppliers.memoize(this::getNameTuple);
+
     private CredentialRepositoryImpl repository;
 
     public ControlledResourceImpl(ResourceEntity entity) {
@@ -26,6 +32,20 @@ public class ControlledResourceImpl implements ControlledResource {
         entity.setPasswords(Collections.emptySet());
         entity.setAuthenticationKeys(Collections.emptySet());
         repository.getSession().persist(entity);
+    }
+
+    private ControlledResourceName getNameTuple() {
+        return repository.splitName(entity.getName());
+    }
+
+    @Override
+    public CredentialManager.ResourceType getType() {
+        return nameTuple.get().type();
+    }
+
+    @Override
+    public String getIdentifier() {
+        return nameTuple.get().identifier();
     }
 
     @Override
@@ -74,8 +94,9 @@ public class ControlledResourceImpl implements ControlledResource {
         authenticationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
         var code = repository.makeEntropicCode(36);
-        // TODO deduplicate
         authenticationKeyEntity.setCode(code);
+        // TODO deduplicate
+        authenticationKeyEntity.setEffectiveCode(code);
 
         authenticationKeyEntity.setCreation(repository.timestamp());
 
@@ -107,6 +128,17 @@ public class ControlledResourceImpl implements ControlledResource {
                 this.entity.getAuthenticationKeys().stream()
                         .filter(e -> !Objects.equals(e.getKeyUsage(), keyUsageName))
                         .toList());
+    }
+
+    @Override
+    public Optional<byte[]> getAuthenticationKeyCode(CredentialManager.KeyUsage keyUsage) {
+        var keyUsageName = repository.keyUsageName(keyUsage);
+
+        return entity.getAuthenticationKeys().stream()
+                .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
+                .findAny()
+                .map(ResourceAuthenticationKeyEntity::getCode)
+                .map(v -> Arrays.copyOf(v, v.length));
     }
 
     @Override

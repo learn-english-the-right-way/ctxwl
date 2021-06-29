@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.Action;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
+import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
 import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity;
@@ -23,17 +24,15 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourcePass
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration.EmailRegistrationEntity;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
-import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchemaImpl;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailServiceImpl;
 
 import javax.sql.DataSource;
 import java.time.Clock;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class IdentityServiceSessionFactoryImpl implements StandardIdentityServiceSessionFactory {
+public class IdentityServiceSessionFactoryImpl implements IdentityServiceSessionFactory {
 
     private final DataSource dataSource;
     private final StandardServiceRegistry serviceRegistry;
@@ -66,6 +65,8 @@ public class IdentityServiceSessionFactoryImpl implements StandardIdentityServic
     }
 
     public static IdentityServiceSessionFactoryImpl create(
+            CredentialSchema credentialSchema,
+            Clock clock,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
@@ -86,8 +87,6 @@ public class IdentityServiceSessionFactoryImpl implements StandardIdentityServic
                 .applyPhysicalNamingStrategy(new IdentityServicePhysicalNamingStrategy())
                 .build();
         var sessionFactory = metadata.getSessionFactoryBuilder().build();
-        var clock = Clock.systemDefaultZone();
-        var credentialSchema = CredentialSchemaImpl.create(new Random(), clock);
         var mailService = MailServiceImpl.create(mailConfiguration);
         return new IdentityServiceSessionFactoryImpl(
                 dataSource,
@@ -101,7 +100,7 @@ public class IdentityServiceSessionFactoryImpl implements StandardIdentityServic
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         sessionFactory.close();
         serviceRegistry.close();
     }

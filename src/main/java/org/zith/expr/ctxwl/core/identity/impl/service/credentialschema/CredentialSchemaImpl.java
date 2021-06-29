@@ -80,10 +80,22 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
+    public ControlledResourceName splitName(String name) {
+        var pos = name.indexOf(':');
+        Preconditions.checkArgument(pos >= 0);
+        var type = switch (name.substring(0, pos)) {
+            case "email_registration" -> CredentialManager.ResourceType.EMAIL_REGISTRATION;
+            default -> throw new IllegalArgumentException();
+        };
+        var identifier = name.substring(pos + 1);
+        return new ControlledResourceName(type, identifier);
+    }
+
+    @Override
     public String keyUsageName(CredentialManager.KeyUsage keyUsage) {
         return switch (keyUsage) {
-            case REGISTRATION -> "registration";
             case REGISTRATION_CONFIRMATION -> "registration-confirmation";
+            case REGISTRATION_CREDENTIAL_PROPOSAL -> "registration-credential-proposal";
             case USER_LOGIN -> "user-login";
             case USER_AUTHENTICATION -> "user-authentication";
         };
@@ -104,12 +116,17 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public boolean validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey) {
+    public Optional<byte[]> validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey) {
         byte[] buffer = BaseEncoding.base64().decode(authenticationKey);
         var hmacs = metaKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsage);
-        return hmacs.stream().anyMatch(hmac -> Arrays.equals(
+        var accepted = hmacs.stream().anyMatch(hmac -> Arrays.equals(
                 hmac.hashBytes(buffer, 0, buffer.length - 32).asBytes(), 0, 32,
                 buffer, buffer.length - 32, buffer.length));
+        if (accepted) {
+            return Optional.of(Arrays.copyOfRange(buffer, 4, buffer.length - 32));
+        } else {
+            return Optional.empty();
+        }
     }
 
     private final class MetaKeyChain {

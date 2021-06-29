@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.EmailRegistrationRepository;
 import org.zith.expr.ctxwl.core.identity.EmailRepository;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
@@ -59,8 +60,13 @@ public class IdentityServiceSessionImpl implements IdentityServiceSession {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         session.close();
+    }
+
+    @Override
+    public CredentialRepository credentialRepository() {
+        return credentialRepositorySupplier.get();
     }
 
     @Override

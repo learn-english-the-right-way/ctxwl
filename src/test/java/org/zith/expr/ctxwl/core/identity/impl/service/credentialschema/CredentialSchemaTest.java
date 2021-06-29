@@ -17,7 +17,7 @@ class CredentialSchemaTest {
         var code =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
         var key = repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code);
-        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key));
+        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key).isPresent());
         assertEquals(key, repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code));
     }
 
@@ -29,13 +29,13 @@ class CredentialSchemaTest {
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
         var key1 = repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code1);
         repository.updateKeys(0, new String[]{"TestKey1", "TestKey2"});
-        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key1));
+        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key1).isPresent());
         var code2 =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0001".getBytes(StandardCharsets.UTF_8);
         var key2 = repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code2);
         repository.updateKeys(1, new String[]{"TestKey2", "TestKey3"});
-        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key2));
-        assertFalse(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key1));
+        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key2).isPresent());
+        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key1).isEmpty());
         var key3 = repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code2);
         assertNotEquals(key2, key3);
     }
@@ -46,7 +46,7 @@ class CredentialSchemaTest {
         var code =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
         var key = repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code);
-        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key));
+        assertTrue(repository.validateAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, key).isPresent());
         assertEquals(key, repository.makeAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code));
     }
 }

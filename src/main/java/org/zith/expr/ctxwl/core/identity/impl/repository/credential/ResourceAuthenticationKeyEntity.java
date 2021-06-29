@@ -13,6 +13,7 @@ public class ResourceAuthenticationKeyEntity {
     private ResourceEntity resource;
     private String keyUsage;
     private byte[] code;
+    private byte[] effectiveCode;
     private Instant creation;
     private Instant expiry;
     private Instant invalidation;
@@ -60,6 +61,14 @@ public class ResourceAuthenticationKeyEntity {
 
     public void setCode(byte[] code) {
         this.code = code;
+    }
+
+    public byte[] getEffectiveCode() {
+        return effectiveCode;
+    }
+
+    public void setEffectiveCode(byte[] effectiveCode) {
+        this.effectiveCode = effectiveCode;
     }
 
     @Column(columnDefinition = "timestamp with time zone")
