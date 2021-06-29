@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
-import org.zith.expr.ctxwl.core.identity.CredentialRepository;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -29,7 +29,7 @@ public class ControlledResourceImpl implements ControlledResource {
     }
 
     @Override
-    public void setPassword(CredentialRepository.KeyUsage keyUsage, String password) {
+    public void setPassword(CredentialManager.KeyUsage keyUsage, String password) {
         Preconditions.checkArgument(repository.validatePassword(password));
 
         invalidateKey(keyUsage);
@@ -40,7 +40,7 @@ public class ControlledResourceImpl implements ControlledResource {
         passwordEntity.setId(entity.getEntrySerial());
         entity.setEntrySerial(entity.getEntrySerial() + 1);
 
-        passwordEntity.setKeyUsage(CredentialRepositoryImpl.keyUsageName(keyUsage));
+        passwordEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
         passwordEntity.setAlgorithm(PasswordAlgorithm.BCRYPT_12.name);
         var salt = repository.makeSalt(16);
@@ -57,7 +57,7 @@ public class ControlledResourceImpl implements ControlledResource {
     }
 
     @Override
-    public String ensureAuthenticationKey(CredentialRepository.KeyUsage keyUsage) {
+    public String ensureAuthenticationKey(CredentialManager.KeyUsage keyUsage) {
         var optionalExistingAuthenticationKey = getAuthenticationKey(keyUsage);
         if (optionalExistingAuthenticationKey.isPresent()) {
             return optionalExistingAuthenticationKey.get();
@@ -71,7 +71,7 @@ public class ControlledResourceImpl implements ControlledResource {
         authenticationKeyEntity.setId(entity.getEntrySerial());
         entity.setEntrySerial(entity.getEntrySerial() + 1);
 
-        authenticationKeyEntity.setKeyUsage(CredentialRepositoryImpl.keyUsageName(keyUsage));
+        authenticationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
         var code = repository.makeEntropicCode(36);
         // TODO deduplicate
@@ -89,8 +89,8 @@ public class ControlledResourceImpl implements ControlledResource {
         return repository.makeAuthenticationKey(keyUsage, code);
     }
 
-    private void invalidateKey(CredentialRepository.KeyUsage keyUsage) {
-        var keyUsageName = CredentialRepositoryImpl.keyUsageName(keyUsage);
+    private void invalidateKey(CredentialManager.KeyUsage keyUsage) {
+        var keyUsageName = repository.keyUsageName(keyUsage);
         entity.getPasswords()
                 .stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
@@ -110,8 +110,8 @@ public class ControlledResourceImpl implements ControlledResource {
     }
 
     @Override
-    public Optional<String> getAuthenticationKey(CredentialRepository.KeyUsage keyUsage) {
-        var keyUsageName = CredentialRepositoryImpl.keyUsageName(keyUsage);
+    public Optional<String> getAuthenticationKey(CredentialManager.KeyUsage keyUsage) {
+        var keyUsageName = repository.keyUsageName(keyUsage);
 
         return entity.getAuthenticationKeys().stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))

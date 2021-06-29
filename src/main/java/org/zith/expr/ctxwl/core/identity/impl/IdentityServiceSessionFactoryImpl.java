@@ -16,16 +16,20 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.Action;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
+import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourcePasswordEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration.EmailRegistrationEntity;
+import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
+import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchemaImpl;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailServiceImpl;
-import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
 
 import javax.sql.DataSource;
+import java.time.Clock;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -35,25 +39,30 @@ public class IdentityServiceSessionFactoryImpl implements StandardIdentityServic
     private final StandardServiceRegistry serviceRegistry;
     private final Metadata metadata;
     private final SessionFactory sessionFactory;
+    private final CredentialSchema credentialSchema;
     private final MailService mailService;
+    private final Clock clock;
 
     public IdentityServiceSessionFactoryImpl(
             DataSource dataSource,
             StandardServiceRegistry serviceRegistry,
             Metadata metadata,
             SessionFactory sessionFactory,
-            MailService mailService
+            CredentialSchema credentialSchema, MailService mailService,
+            Clock clock
     ) {
         this.dataSource = dataSource;
         this.serviceRegistry = serviceRegistry;
         this.metadata = metadata;
         this.sessionFactory = sessionFactory;
+        this.credentialSchema = credentialSchema;
         this.mailService = mailService;
+        this.clock = clock;
     }
 
     @Override
     public IdentityServiceSession openSession() {
-        return IdentityServiceSessionImpl.create(sessionFactory, mailService);
+        return IdentityServiceSessionImpl.create(sessionFactory, credentialSchema, mailService, clock);
     }
 
     public static IdentityServiceSessionFactoryImpl create(
@@ -77,13 +86,17 @@ public class IdentityServiceSessionFactoryImpl implements StandardIdentityServic
                 .applyPhysicalNamingStrategy(new IdentityServicePhysicalNamingStrategy())
                 .build();
         var sessionFactory = metadata.getSessionFactoryBuilder().build();
+        var clock = Clock.systemDefaultZone();
+        var credentialSchema = CredentialSchemaImpl.create(new Random(), clock);
         var mailService = MailServiceImpl.create(mailConfiguration);
         return new IdentityServiceSessionFactoryImpl(
                 dataSource,
                 serviceRegistry,
                 metadata,
                 sessionFactory,
-                mailService
+                credentialSchema,
+                mailService,
+                clock
         );
     }
 

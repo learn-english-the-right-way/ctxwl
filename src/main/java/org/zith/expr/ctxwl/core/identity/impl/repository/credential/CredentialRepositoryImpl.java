@@ -5,29 +5,25 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.util.Random;
 
-public class CredentialRepositoryImpl extends AbstractCredentialRepository implements CredentialRepository {
+public class CredentialRepositoryImpl implements CredentialRepository {
     private final Session session;
-    private final Clock clock;
-    private final Random random;
+    private final CredentialSchema credentialSchema;
 
-    public CredentialRepositoryImpl(Session session, Clock clock) {
+    public CredentialRepositoryImpl(Session session, CredentialSchema credentialSchema) {
         Preconditions.checkNotNull(session);
-        Preconditions.checkNotNull(clock);
-
-        this.clock = clock;
-        random = new Random();
-
+        Preconditions.checkNotNull(credentialSchema);
         this.session = session;
+        this.credentialSchema = credentialSchema;
     }
 
     @Override
-    public ControlledResource ensure(ResourceType resourceType, String identifier) {
-        var name = makeName(resourceType, identifier);
+    public ControlledResource ensure(CredentialManager.ResourceType resourceType, String identifier) {
+        var name = credentialSchema.makeName(resourceType, identifier);
         return session
                 .byNaturalId(ResourceEntity.class)
                 .using("name", name)
@@ -42,31 +38,41 @@ public class CredentialRepositoryImpl extends AbstractCredentialRepository imple
         return session;
     }
 
+    byte[] makeSalt(int size) {
+        return credentialSchema.makeSalt(size);
+    }
+
+    Instant timestamp() {
+        return credentialSchema.timestamp();
+    }
+
+    byte[] makeEntropicCode(int size) {
+        return credentialSchema.makeEntropicCode(size);
+    }
+
     @Override
     public void updateKeys(int offset, String[] keys) {
-        super.updateKeys(offset, keys);
+        credentialSchema.updateKeys(offset, keys);
     }
 
     @Override
     public boolean validatePassword(String password) {
-        return super.validatePassword(password);
+        return credentialSchema.validatePassword(password);
     }
 
-    byte[] makeSalt(int size) {
-        Preconditions.checkArgument(size > 0);
-        var salt = new byte[size];
-        random.nextBytes(salt);
-        return salt;
+    String makeName(CredentialManager.ResourceType resourceType, String identifier) {
+        return credentialSchema.makeName(resourceType, identifier);
     }
 
-    Instant timestamp() {
-        return clock.instant();
+    String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
+        return credentialSchema.makeAuthenticationKey(keyUsage, code);
     }
 
-    byte[] makeEntropicCode(int size) {
-        Preconditions.checkArgument(size > 0);
-        var salt = new byte[size];
-        random.nextBytes(salt);
-        return salt;
+    boolean validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey) {
+        return credentialSchema.validateAuthenticationKey(keyUsage, authenticationKey);
+    }
+
+    String keyUsageName(CredentialManager.KeyUsage keyUsage) {
+        return credentialSchema.keyUsageName(keyUsage);
     }
 }

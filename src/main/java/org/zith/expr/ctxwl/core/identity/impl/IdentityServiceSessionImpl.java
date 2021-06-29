@@ -10,6 +10,7 @@ import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.CredentialRepositoryImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration.EmailRegistrationRepositoryImpl;
+import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
 import java.time.Clock;
@@ -18,26 +19,24 @@ import java.util.function.Supplier;
 public class IdentityServiceSessionImpl implements IdentityServiceSession {
 
     private final Session session;
-    private final Clock clock;
     private final Supplier<EmailRepositoryImpl> emailRepositorySupplier;
     private final Supplier<CredentialRepositoryImpl> credentialRepositorySupplier;
     private final Supplier<EmailRegistrationRepositoryImpl> emailRegistrationRepositorySupplier;
 
-    public IdentityServiceSessionImpl(Session session, MailService mailService) {
+    public IdentityServiceSessionImpl(Session session, CredentialSchema credentialSchema, MailService mailService, Clock clock) {
         this.session = session;
-        clock = Clock.systemDefaultZone();
         emailRepositorySupplier = Suppliers.memoize(() ->
                 new EmailRepositoryImpl(session, mailService));
         credentialRepositorySupplier = Suppliers.memoize(() ->
-                new CredentialRepositoryImpl(session, clock));
+                new CredentialRepositoryImpl(session, credentialSchema));
         emailRegistrationRepositorySupplier = Suppliers.memoize(() ->
                 new EmailRegistrationRepositoryImpl(
                         session, clock, emailRepositorySupplier.get(), credentialRepositorySupplier.get()));
     }
 
-    public static IdentityServiceSession create(SessionFactory sessionFactory, MailService mailService) {
+    public static IdentityServiceSession create(SessionFactory sessionFactory, CredentialSchema credentialSchema, MailService mailService, Clock clock) {
         Preconditions.checkNotNull(sessionFactory);
-        return new IdentityServiceSessionImpl(sessionFactory.openSession(), mailService);
+        return new IdentityServiceSessionImpl(sessionFactory.openSession(), credentialSchema, mailService, clock);
     }
 
     @Override

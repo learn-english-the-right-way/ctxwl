@@ -1,9 +1,9 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration;
 
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
-import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailImpl;
 
 import java.time.Instant;
@@ -44,7 +44,7 @@ public class EmailRegistrationImpl implements EmailRegistration {
     public ControlledResource getControlledResource() {
         if (controlledResource == null) {
             controlledResource = repository.getCredentialRepository().ensure(
-                    CredentialRepository.ResourceType.EMAIL_REGISTRATION,
+                    CredentialManager.ResourceType.EMAIL_REGISTRATION,
                     entity.getId().toString()
             );
         }
@@ -65,8 +65,8 @@ public class EmailRegistrationImpl implements EmailRegistration {
         repository.getSession().persist(entity);
 
         var controlledResource = getControlledResource();
-        controlledResource.setPassword(CredentialRepository.KeyUsage.REGISTRATION, password);
-        controlledResource.ensureAuthenticationKey(CredentialRepository.KeyUsage.REGISTRATION_CONFIRMATION);
+        controlledResource.setPassword(CredentialManager.KeyUsage.REGISTRATION, password);
+        controlledResource.ensureAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
     }
 
 

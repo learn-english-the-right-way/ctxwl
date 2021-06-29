@@ -1,13 +1,15 @@
-package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
+package org.zith.expr.ctxwl.core.identity.impl.service.credentialschema;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Ints;
-import org.zith.expr.ctxwl.core.identity.CredentialRepository;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -16,24 +18,58 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @SuppressWarnings("UnstableApiUsage")
-abstract class AbstractCredentialRepository {
+public class CredentialSchemaImpl implements CredentialSchema {
     private final static Pattern PASSWORD_PATTERN = Pattern.compile("^[\\p{ASCII}&&[^\\p{Blank}\\p{Cntrl}]]{8,32}$");
 
+    private final Random random;
+    private final Clock clock;
     private MetaKeyChain metaKeyChain;
 
-    protected AbstractCredentialRepository() {
+    private CredentialSchemaImpl(Random random, Clock clock) {
+        Objects.requireNonNull(random);
+        Objects.requireNonNull(clock);
+        this.random = random;
+        this.clock = clock;
         metaKeyChain = new MetaKeyChain(-1, new String[]{""});
     }
 
-    void updateKeys(int offset, String[] keys) {
+    public static CredentialSchema create(Random random, Clock clock) {
+        return new CredentialSchemaImpl(random, clock);
+    }
+
+    @Override
+    public byte[] makeSalt(int size) {
+        Preconditions.checkArgument(size > 0);
+        var salt = new byte[size];
+        random.nextBytes(salt);
+        return salt;
+    }
+
+    @Override
+    public Instant timestamp() {
+        return clock.instant();
+    }
+
+    @Override
+    public byte[] makeEntropicCode(int size) {
+        Preconditions.checkArgument(size > 0);
+        var salt = new byte[size];
+        random.nextBytes(salt);
+        return salt;
+    }
+
+    @Override
+    public void updateKeys(int offset, String[] keys) {
         metaKeyChain = new MetaKeyChain(0, keys);
     }
 
-    boolean validatePassword(String password) {
+    @Override
+    public boolean validatePassword(String password) {
         return PASSWORD_PATTERN.matcher(password).matches();
     }
 
-    String makeName(CredentialRepository.ResourceType resourceType, String identifier) {
+    @Override
+    public String makeName(CredentialManager.ResourceType resourceType, String identifier) {
         StringBuilder sb = new StringBuilder();
         sb.append(switch (resourceType) {
             case EMAIL_REGISTRATION -> "email_registration";
@@ -43,7 +79,18 @@ abstract class AbstractCredentialRepository {
         return sb.toString();
     }
 
-    String makeAuthenticationKey(CredentialRepository.KeyUsage keyUsage, byte[] code) {
+    @Override
+    public String keyUsageName(CredentialManager.KeyUsage keyUsage) {
+        return switch (keyUsage) {
+            case REGISTRATION -> "registration";
+            case REGISTRATION_CONFIRMATION -> "registration-confirmation";
+            case USER_LOGIN -> "user-login";
+            case USER_AUTHENTICATION -> "user-authentication";
+        };
+    }
+
+    @Override
+    public String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
         var keyType = metaKeyChain.current(keyUsage);
 
         var typeOffset = 4;
@@ -56,7 +103,8 @@ abstract class AbstractCredentialRepository {
         return BaseEncoding.base64().encode(buffer);
     }
 
-    boolean validateAuthenticationKey(CredentialRepository.KeyUsage keyUsage, String authenticationKey) {
+    @Override
+    public boolean validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey) {
         byte[] buffer = BaseEncoding.base64().decode(authenticationKey);
         var hmacs = metaKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsage);
         return hmacs.stream().anyMatch(hmac -> Arrays.equals(
@@ -64,17 +112,8 @@ abstract class AbstractCredentialRepository {
                 buffer, buffer.length - 32, buffer.length));
     }
 
-    static String keyUsageName(CredentialRepository.KeyUsage keyUsage) {
-        return switch (keyUsage) {
-            case REGISTRATION -> "registration";
-            case REGISTRATION_CONFIRMATION -> "registration-confirmation";
-            case USER_LOGIN -> "user-login";
-            case USER_AUTHENTICATION -> "user-authentication";
-        };
-    }
-
-    private static class MetaKeyChain {
-        private final List<EnumMap<CredentialRepository.KeyUsage, KeyType>> keyTypes;
+    private final class MetaKeyChain {
+        private final List<EnumMap<CredentialManager.KeyUsage, KeyType>> keyTypes;
         private final Map<Integer, List<KeyType>> typesByCode;
 
         MetaKeyChain(int offset, String[] metaKeys) {
@@ -85,7 +124,7 @@ abstract class AbstractCredentialRepository {
                     .map(e -> {
                         var serial = e.getKey();
                         var metaKey = e.getValue();
-                        return new EnumMap<>(Arrays.stream(CredentialRepository.KeyUsage.values())
+                        return new EnumMap<>(Arrays.stream(CredentialManager.KeyUsage.values())
                                 .map(keyUsage -> {
                                     var metaKeyName = offset + ":" + metaKey;
                                     var hmac =
@@ -112,11 +151,11 @@ abstract class AbstractCredentialRepository {
                             .collect(Collectors.groupingBy(KeyType::code));
         }
 
-        KeyType current(CredentialRepository.KeyUsage keyUsage) {
+        KeyType current(CredentialManager.KeyUsage keyUsage) {
             return keyTypes.get(keyTypes.size() - 1).get(keyUsage);
         }
 
-        List<HashFunction> resolveHmac(int code, CredentialRepository.KeyUsage keyUsage) {
+        List<HashFunction> resolveHmac(int code, CredentialManager.KeyUsage keyUsage) {
             return Stream.ofNullable(typesByCode.get(code))
                     .flatMap(Collection::stream)
                     .filter(t -> Objects.equals(t.keyUsage(), keyUsage))
@@ -124,7 +163,7 @@ abstract class AbstractCredentialRepository {
                     .toList();
         }
 
-        static record KeyType(int serial, CredentialRepository.KeyUsage keyUsage, HashFunction hmac, int code) {
+        static record KeyType(int serial, CredentialManager.KeyUsage keyUsage, HashFunction hmac, int code) {
         }
     }
 }

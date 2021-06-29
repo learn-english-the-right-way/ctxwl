@@ -3,9 +3,9 @@ package org.zith.expr.ctxwl.webapi.emailregistration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.util.Optional;
 
@@ -36,7 +36,7 @@ public class EmailRegistrationWebCollection {
                                 "Code: " + emailRegistration.getConfirmationCode()));
                 var authenticationKey =
                         emailRegistration.getControlledResource()
-                                .getAuthenticationKey(CredentialRepository.KeyUsage.REGISTRATION_CONFIRMATION);
+                                .getAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
                 return new Execution(
                         new EmailRegistrationWebDocument(
                                 emailRegistration.getEmail().getAddress(),
