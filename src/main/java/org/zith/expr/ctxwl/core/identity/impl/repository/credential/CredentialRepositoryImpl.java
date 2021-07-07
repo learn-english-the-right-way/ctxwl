@@ -6,10 +6,10 @@ import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
-import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.ControlledResourceName;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CredentialRepositoryImpl implements CredentialRepository {
@@ -25,15 +25,14 @@ public class CredentialRepositoryImpl implements CredentialRepository {
 
     @Override
     public ControlledResource ensure(CredentialManager.ResourceType resourceType, String identifier) {
-        var name = makeName(resourceType, identifier);
         return session
                 .byNaturalId(ResourceEntity.class)
-                .using("name", name)
+                .using("name", makeName(resourceType, identifier))
                 .with(LockOptions.READ)
                 .loadOptional()
                 .map(ResourceEntity::getDelegate)
                 .map(r -> r.bind(this))
-                .orElseGet(() -> ControlledResourceImpl.create(this, name));
+                .orElseGet(() -> ControlledResourceImpl.create(this, resourceType, identifier));
     }
 
     @Override
@@ -42,15 +41,21 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     }
 
     @Override
-    public Optional<ControlledResource> lookupByAuthenticationKeyCode(CredentialManager.KeyUsage keyUsage, byte[] code) {
+    public Optional<ControlledResource> lookupByAuthenticationKeyCode(CredentialManager.Domain domain, byte[] code) {
         var cb = session.getCriteriaBuilder();
-        var q = cb.createQuery(ResourceEntity.class);
-        var r = q.from(ResourceEntity.class);
-        var rk = r.join(ResourceEntity_.authenticationKeys);
+        var q = cb.createQuery(ResourceAuthenticationKeyEntity.class);
+        var rk = q.from(ResourceAuthenticationKeyEntity.class);
+        var rkc = rk.join(ResourceAuthenticationKeyEntity_.effectiveCode);
         q.where(cb.and(
-                cb.equal(rk.get(ResourceAuthenticationKeyEntity_.effectiveCode), code)),
-                cb.equal(rk.get(ResourceAuthenticationKeyEntity_.keyUsage), keyUsageName(keyUsage)));
-        return session.createQuery(q).uniqueResultOptional().map(ResourceEntity::getDelegate).map(d -> d.bind(this));
+                cb.equal(rkc.get(ResourceAuthenticationKeyCodeEntity_.code), code),
+                rk.get(ResourceAuthenticationKeyEntity_.keyUsage)
+                        .in(domain.getKeyUsages().stream().map(this::keyUsageName).toList())));
+        return session.createQuery(q).uniqueResultOptional()
+                .filter(k -> domain.getPrincipalTypes().stream()
+                        .anyMatch(t -> Objects.equals(k.getKeyUsage(), keyUsageName(t.authenticationMethod())) &&
+                                Objects.equals(k.getResource().getType(), typeName(t.reflectiveType()))))
+                .map(ResourceAuthenticationKeyEntity::getResource)
+                .map(ResourceEntity::getDelegate).map(d -> d.bind(this));
     }
 
     Session getSession() {
@@ -69,13 +74,8 @@ public class CredentialRepositoryImpl implements CredentialRepository {
         return credentialSchema.makeEntropicCode(size);
     }
 
-
     String makeName(CredentialManager.ResourceType resourceType, String identifier) {
         return credentialSchema.makeName(resourceType, identifier);
-    }
-
-    ControlledResourceName splitName(String name) {
-        return credentialSchema.splitName(name);
     }
 
     String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
@@ -84,5 +84,9 @@ public class CredentialRepositoryImpl implements CredentialRepository {
 
     String keyUsageName(CredentialManager.KeyUsage keyUsage) {
         return credentialSchema.keyUsageName(keyUsage);
+    }
+
+    String typeName(CredentialManager.ResourceType resourceType) {
+        return credentialSchema.typeName(resourceType);
     }
 }

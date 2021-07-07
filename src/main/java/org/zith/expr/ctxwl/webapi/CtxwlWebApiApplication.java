@@ -4,7 +4,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
-import org.zith.expr.ctxwl.webapi.authentication.EmailRegistrantAuthenticationFilter;
+import org.zith.expr.ctxwl.webapi.authentication.DefaultAuthenticationFilter;
 import org.zith.expr.ctxwl.webapi.emailregistration.EmailRegistrationWebCollection;
 import org.zith.expr.ctxwl.webapi.mapper.ObjectMapperProvider;
 
@@ -19,7 +19,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
         register(ObjectMapperProvider.class);
         register(new RepositoryBinder());
 
-        register(EmailRegistrantAuthenticationFilter.class);
+        register(DefaultAuthenticationFilter.class);
 
         register(EmailRegistrationWebCollection.class);
     }

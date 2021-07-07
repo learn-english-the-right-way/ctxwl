@@ -71,24 +71,18 @@ public class CredentialSchemaImpl implements CredentialSchema {
     @Override
     public String makeName(CredentialManager.ResourceType resourceType, String identifier) {
         StringBuilder sb = new StringBuilder();
-        sb.append(switch (resourceType) {
-            case EMAIL_REGISTRATION -> "email_registration";
-        });
+        sb.append(typeName(resourceType));
         sb.append(':');
         sb.append(identifier.replaceAll("[:\\\\]", "\\\\$0"));
         return sb.toString();
     }
 
     @Override
-    public ControlledResourceName splitName(String name) {
-        var pos = name.indexOf(':');
-        Preconditions.checkArgument(pos >= 0);
-        var type = switch (name.substring(0, pos)) {
-            case "email_registration" -> CredentialManager.ResourceType.EMAIL_REGISTRATION;
-            default -> throw new IllegalArgumentException();
+    public String typeName(CredentialManager.ResourceType resourceType) {
+        return switch (resourceType) {
+            case USER -> "user";
+            case EMAIL_REGISTRATION -> "email_registration";
         };
-        var identifier = name.substring(pos + 1);
-        return new ControlledResourceName(type, identifier);
     }
 
     @Override
@@ -116,9 +110,19 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public Optional<byte[]> validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey) {
-        byte[] buffer = BaseEncoding.base64().decode(authenticationKey);
-        var hmacs = metaKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsage);
+    public Optional<byte[]> validateAuthenticationKey(Set<CredentialManager.KeyUsage> keyUsages, String authenticationKey) {
+        byte[] buffer;
+        try {
+            buffer = BaseEncoding.base64().decode(authenticationKey);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+
+        if (buffer.length<36) {
+            return Optional.empty();
+        }
+
+        var hmacs = metaKeyChain.resolveHmac(Ints.fromBytes(buffer[0], buffer[1], buffer[2], buffer[3]), keyUsages);
         var accepted = hmacs.stream().anyMatch(hmac -> Arrays.equals(
                 hmac.hashBytes(buffer, 0, buffer.length - 32).asBytes(), 0, 32,
                 buffer, buffer.length - 32, buffer.length));
@@ -172,10 +176,10 @@ public class CredentialSchemaImpl implements CredentialSchema {
             return keyTypes.get(keyTypes.size() - 1).get(keyUsage);
         }
 
-        List<HashFunction> resolveHmac(int code, CredentialManager.KeyUsage keyUsage) {
+        List<HashFunction> resolveHmac(int code, Set<CredentialManager.KeyUsage> keyUsages) {
             return Stream.ofNullable(typesByCode.get(code))
                     .flatMap(Collection::stream)
-                    .filter(t -> Objects.equals(t.keyUsage(), keyUsage))
+                    .filter(t -> keyUsages.contains(t.keyUsage()))
                     .map(KeyType::hmac)
                     .toList();
         }

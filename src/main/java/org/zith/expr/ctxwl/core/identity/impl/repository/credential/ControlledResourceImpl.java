@@ -1,24 +1,20 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
-import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.ControlledResourceName;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ControlledResourceImpl implements ControlledResource {
     private final ResourceEntity entity;
-    private final Supplier<ControlledResourceName> nameTuple = Suppliers.memoize(this::getNameTuple);
 
     private CredentialRepositoryImpl repository;
 
@@ -26,26 +22,27 @@ public class ControlledResourceImpl implements ControlledResource {
         this.entity = entity;
     }
 
-    private void initialize(String name) {
-        entity.setName(name);
+    private void initialize(CredentialManager.ResourceType resourceType, String identifier) {
+        entity.setName(repository.makeName(resourceType, identifier));
+        entity.setType(repository.typeName(resourceType));
+        entity.setIdentifier(identifier);
         entity.setEntrySerial(1);
         entity.setPasswords(Collections.emptySet());
         entity.setAuthenticationKeys(Collections.emptySet());
         repository.getSession().persist(entity);
     }
 
-    private ControlledResourceName getNameTuple() {
-        return repository.splitName(entity.getName());
-    }
-
     @Override
     public CredentialManager.ResourceType getType() {
-        return nameTuple.get().type();
+        return Arrays.stream(CredentialManager.ResourceType.values())
+                .filter(t -> Objects.equals(repository.typeName(t), entity.getType()))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + entity.getType()));
     }
 
     @Override
     public String getIdentifier() {
-        return nameTuple.get().identifier();
+        return entity.getIdentifier();
     }
 
     @Override
@@ -95,10 +92,14 @@ public class ControlledResourceImpl implements ControlledResource {
 
         var code = repository.makeEntropicCode(36);
         authenticationKeyEntity.setCode(code);
-        // TODO deduplicate
-        authenticationKeyEntity.setEffectiveCode(code);
 
         authenticationKeyEntity.setCreation(repository.timestamp());
+
+        var effectiveCodeEntity = new ResourceAuthenticationKeyCodeEntity();
+        effectiveCodeEntity.setCode(code);
+        authenticationKeyEntity.setEffectiveCode(effectiveCodeEntity);
+        repository.getSession().persist(effectiveCodeEntity);
+        authenticationKeyEntity.setCodeId(effectiveCodeEntity.getId());
 
         repository.getSession().persist(authenticationKeyEntity);
 
@@ -156,9 +157,13 @@ public class ControlledResourceImpl implements ControlledResource {
         return this;
     }
 
-    public static ControlledResourceImpl create(CredentialRepositoryImpl repository, String name) {
+    public static ControlledResourceImpl create(
+            CredentialRepositoryImpl repository,
+            CredentialManager.ResourceType resourceType,
+            String identifier
+    ) {
         var controlledResource = new ResourceEntity().getDelegate().bind(repository);
-        controlledResource.initialize(name);
+        controlledResource.initialize(resourceType, identifier);
         return controlledResource;
     }
 

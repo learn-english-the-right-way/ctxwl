@@ -24,15 +24,12 @@ public class CredentialManagerImpl implements CredentialManager {
     }
 
     @Override
-    public Optional<String> authenticate(PrincipalType principalType, String authenticationKey) {
-        return credentialSchema.validateAuthenticationKey(principalType.authenticationMethod(), authenticationKey)
+    public Optional<ControlledResource> authenticate(Domain domain, String authenticationKey) {
+        return credentialSchema.validateAuthenticationKey(domain.getKeyUsages(), authenticationKey)
                 .flatMap(code -> {
                     try (var session = identityServiceSessionFactory.openSession()) {
                         return session.withTransaction(() ->
-                                session.credentialRepository()
-                                        .lookupByAuthenticationKeyCode(principalType.authenticationMethod(), code)
-                                        .filter(r -> r.getType() == principalType.reflectiveType())
-                                        .map(ControlledResource::getIdentifier));
+                                session.credentialRepository().lookupByAuthenticationKeyCode(domain, code));
                     }
                 });
     }

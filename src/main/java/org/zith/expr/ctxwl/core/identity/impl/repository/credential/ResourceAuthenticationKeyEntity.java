@@ -5,6 +5,9 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
+import static org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity_.CODE_ID;
+import static org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity_.RESOURCE_ID;
+
 @Entity
 @IdClass(ResourceAuthenticationKeyEntity.Key.class)
 public class ResourceAuthenticationKeyEntity {
@@ -13,7 +16,8 @@ public class ResourceAuthenticationKeyEntity {
     private ResourceEntity resource;
     private String keyUsage;
     private byte[] code;
-    private byte[] effectiveCode;
+    private Long codeId;
+    private ResourceAuthenticationKeyCodeEntity effectiveCode;
     private Instant creation;
     private Instant expiry;
     private Instant invalidation;
@@ -36,7 +40,7 @@ public class ResourceAuthenticationKeyEntity {
         this.id = id;
     }
 
-    @JoinColumn(name = "resourceId", referencedColumnName = "id", updatable = false, insertable = false)
+    @JoinColumn(name = RESOURCE_ID, referencedColumnName = ResourceEntity_.ID, updatable = false, insertable = false)
     @ManyToOne
     public ResourceEntity getResource() {
         return resource;
@@ -63,11 +67,26 @@ public class ResourceAuthenticationKeyEntity {
         this.code = code;
     }
 
-    public byte[] getEffectiveCode() {
+    public Long getCodeId() {
+        return codeId;
+    }
+
+    public void setCodeId(Long codeId) {
+        this.codeId = codeId;
+    }
+
+    @JoinColumn(
+            name = CODE_ID,
+            referencedColumnName = ResourceAuthenticationKeyCodeEntity_.ID,
+            insertable = false,
+            updatable = false
+    )
+    @OneToOne(fetch = FetchType.LAZY)
+    public ResourceAuthenticationKeyCodeEntity getEffectiveCode() {
         return effectiveCode;
     }
 
-    public void setEffectiveCode(byte[] effectiveCode) {
+    public void setEffectiveCode(ResourceAuthenticationKeyCodeEntity effectiveCode) {
         this.effectiveCode = effectiveCode;
     }
 

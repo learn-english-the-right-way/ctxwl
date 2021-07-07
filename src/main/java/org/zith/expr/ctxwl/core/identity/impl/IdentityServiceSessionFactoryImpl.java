@@ -18,6 +18,7 @@ import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
 import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
+import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyCodeEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourcePasswordEntity;
@@ -81,6 +82,7 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
                 .addAnnotatedClass(EmailRegistrationEntity.class)
                 .addAnnotatedClass(ResourceEntity.class)
                 .addAnnotatedClass(ResourceAuthenticationKeyEntity.class)
+                .addAnnotatedClass(ResourceAuthenticationKeyCodeEntity.class)
                 .addAnnotatedClass(ResourcePasswordEntity.class)
                 .getMetadataBuilder()
                 .applyImplicitNamingStrategy(new IdentityServiceImplicitNamingStrategy())

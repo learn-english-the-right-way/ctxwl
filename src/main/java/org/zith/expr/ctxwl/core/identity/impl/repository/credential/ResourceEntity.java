@@ -14,6 +14,8 @@ public class ResourceEntity {
 
     private Long id;
     private String name;
+    private String type;
+    private String identifier;
     private Integer entrySerial;
     private Collection<ResourcePasswordEntity> passwords;
     private Collection<ResourceAuthenticationKeyEntity> authenticationKeys;
@@ -36,6 +38,22 @@ public class ResourceEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     @Column(nullable = false)

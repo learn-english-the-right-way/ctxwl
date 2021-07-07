@@ -6,9 +6,11 @@ import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.EmailRegistrationRepository;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.CredentialRepositoryImpl;
+import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryImpl;
 
 import java.time.Clock;
+import java.util.Optional;
 import java.util.Random;
 
 public class EmailRegistrationRepositoryImpl implements EmailRegistrationRepository {
@@ -42,6 +44,20 @@ public class EmailRegistrationRepositoryImpl implements EmailRegistrationReposit
 
         var email = emailRepository.ensure(address);
         return EmailRegistrationImpl.create(this, email, password, makeConfirmationCode(), clock.instant());
+    }
+
+    @Override
+    public Optional<EmailRegistration> get(String address) {
+        return emailRepository.get(address, EmailImpl.class)
+                .flatMap(email -> {
+                    var cb = session.getCriteriaBuilder();
+                    var q = cb.createQuery(EmailRegistrationEntity.class);
+                    var r = q.from(EmailRegistrationEntity.class);
+                    q.where(cb.equal(r.get(EmailRegistrationEntity_.EMAIL), email.getEntity()));
+                    return session.createQuery(q).setMaxResults(1).uniqueResultOptional()
+                            .map(EmailRegistrationEntity::getDelegate)
+                            .map(e -> e.bind(this));
+                });
     }
 
     private String makeConfirmationCode() {

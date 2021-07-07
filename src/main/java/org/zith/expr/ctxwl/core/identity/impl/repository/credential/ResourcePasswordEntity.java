@@ -1,9 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
@@ -13,6 +10,7 @@ import java.util.Objects;
 public class ResourcePasswordEntity {
     private Long resourceId;
     private Integer id;
+    private ResourceEntity resource;
     private String keyUsage;
     private String algorithm;
     private String salt;
@@ -37,6 +35,16 @@ public class ResourcePasswordEntity {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    @JoinColumn(name = "resourceId", referencedColumnName = "id", updatable = false, insertable = false)
+    @ManyToOne
+    public ResourceEntity getResource() {
+        return resource;
+    }
+
+    public void setResource(ResourceEntity resource) {
+        this.resource = resource;
     }
 
     @Column(columnDefinition = "text")

@@ -4,6 +4,7 @@ import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 public interface CredentialSchema {
     byte[] makeSalt(int size);
@@ -18,12 +19,12 @@ public interface CredentialSchema {
 
     String makeName(CredentialManager.ResourceType resourceType, String identifier);
 
-    ControlledResourceName splitName(String name);
+    String typeName(CredentialManager.ResourceType resourceType);
 
     String keyUsageName(CredentialManager.KeyUsage keyUsage);
 
     String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code);
 
-    Optional<byte[]> validateAuthenticationKey(CredentialManager.KeyUsage keyUsage, String authenticationKey);
+    Optional<byte[]> validateAuthenticationKey(Set<CredentialManager.KeyUsage> keyUsages, String authenticationKey);
 
 }

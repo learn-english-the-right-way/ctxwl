@@ -1,26 +1,35 @@
 package org.zith.expr.ctxwl.core.identity;
 
+import com.google.common.base.Preconditions;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public interface CredentialManager extends AutoCloseable {
-    Optional<String> authenticate(PrincipalType principalType, String authenticationKey);
+    Optional<ControlledResource> authenticate(Domain domain, String authenticationKey);
 
     @Override
     void close();
 
     enum ResourceType {
+        USER,
         EMAIL_REGISTRATION,
     }
 
     enum KeyUsage {
-        REGISTRATION_CONFIRMATION,
-        REGISTRATION_CREDENTIAL_PROPOSAL,
         USER_LOGIN,
         USER_AUTHENTICATION,
+        REGISTRATION_CONFIRMATION,
+        REGISTRATION_CREDENTIAL_PROPOSAL,
     }
 
     enum PrincipalType {
-        EMAIL_REGISTRANT(ResourceType.EMAIL_REGISTRATION, KeyUsage.REGISTRATION_CONFIRMATION);
+        USER(ResourceType.USER, KeyUsage.USER_LOGIN),
+        EMAIL_REGISTRANT(ResourceType.EMAIL_REGISTRATION, KeyUsage.REGISTRATION_CONFIRMATION),
+        ;
 
         private final ResourceType reflectiveType;
         private final KeyUsage authenticationMethod;
@@ -36,6 +45,36 @@ public interface CredentialManager extends AutoCloseable {
 
         public KeyUsage authenticationMethod() {
             return authenticationMethod;
+        }
+    }
+
+    enum Domain {
+        GENERAL_ACCESS(PrincipalType.USER, PrincipalType.EMAIL_REGISTRANT),
+        ;
+
+        private final List<PrincipalType> principalTypes;
+        private final Set<KeyUsage> keyUsages;
+
+        Domain(PrincipalType... principalTypes) {
+            Arrays.stream(principalTypes)
+                    .collect(Collectors.groupingBy(PrincipalType::authenticationMethod))
+                    .forEach((key, value) -> Preconditions.checkArgument(
+                            value.size() <= 1,
+                            "Multiple resources are requested to be authenticated through the same key usage." +
+                                    " Only one key usage is allowed at most." +
+                                    " - key usage: %s, resources %s", key, value));
+            this.principalTypes = List.of(principalTypes);
+            keyUsages = this.principalTypes.stream()
+                    .map(PrincipalType::authenticationMethod)
+                    .collect(Collectors.toUnmodifiableSet());
+        }
+
+        public List<PrincipalType> getPrincipalTypes() {
+            return principalTypes;
+        }
+
+        public Set<KeyUsage> getKeyUsages() {
+            return keyUsages;
         }
     }
 }

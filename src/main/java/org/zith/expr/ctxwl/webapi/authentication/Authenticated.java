@@ -7,5 +7,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @NameBinding
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LimitedToEmailRegistrant {
+public @interface Authenticated {
 }

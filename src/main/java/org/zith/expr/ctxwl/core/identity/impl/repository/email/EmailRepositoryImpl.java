@@ -6,6 +6,8 @@ import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.EmailRepository;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
+import java.util.Optional;
+
 public class EmailRepositoryImpl implements EmailRepository {
 
     private final Session session;
@@ -22,7 +24,7 @@ public class EmailRepositoryImpl implements EmailRepository {
     public EmailImpl ensure(String address) {
         var cAddress = canonicalizeAddress(address);
         var entity = session.byNaturalId(EmailEntity.class)
-                .using("address", cAddress)
+                .using(EmailEntity_.ADDRESS, cAddress)
                 .loadOptional()
                 .orElseGet(() -> {
                     var freshEntity = new EmailEntity();
@@ -31,6 +33,22 @@ public class EmailRepositoryImpl implements EmailRepository {
                     return freshEntity;
                 });
         return entity.getDelegate().bind(this);
+    }
+
+    @Override
+    public Optional<Email> get(String address) {
+        return get(address, Email.class);
+    }
+
+    public <T> Optional<T> get(String address, Class<T> clazz) {
+        var cAddress = canonicalizeAddress(address);
+        return session.byNaturalId(EmailEntity.class)
+                .using(EmailEntity_.ADDRESS, cAddress)
+                .loadOptional()
+                .map(EmailEntity::getDelegate)
+                .map(e -> e.bind(this))
+                .filter(clazz::isInstance)
+                .map(clazz::cast);
     }
 
     private String canonicalizeAddress(String address) {
