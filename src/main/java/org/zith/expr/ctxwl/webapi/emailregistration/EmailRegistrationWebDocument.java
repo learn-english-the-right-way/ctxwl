@@ -11,7 +11,6 @@ public record EmailRegistrationWebDocument(
         Optional<String> password,
         Optional<String> applicationKey,
         Optional<String> confirmationCode,
-        Optional<Integer> userId,
         Optional<String> userAuthenticationApplicationKey,
         Optional<SessionToken> userSessionToken) {
 

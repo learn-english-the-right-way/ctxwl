@@ -24,6 +24,7 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceEnti
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourcePasswordEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration.EmailRegistrationEntity;
+import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserEntity;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailServiceImpl;
@@ -76,8 +77,10 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
                 new StandardServiceRegistryBuilder()
                         .applySetting(AvailableSettings.DATASOURCE, dataSource)
                         .applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP)
+                        .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true)
                         .build();
         var metadata = new MetadataSources(serviceRegistry)
+                .addAnnotatedClass(UserEntity.class)
                 .addAnnotatedClass(EmailEntity.class)
                 .addAnnotatedClass(EmailRegistrationEntity.class)
                 .addAnnotatedClass(ResourceEntity.class)
@@ -150,11 +153,7 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
         }
 
         private Identifier convert(Function<String, String> mapper, Identifier name, JdbcEnvironment context) {
-            if (name.isQuoted()) {
-                return name;
-            } else {
-                return context.getIdentifierHelper().toIdentifier(mapper.apply(name.getText()));
-            }
+            return context.getIdentifierHelper().toIdentifier(mapper.apply(name.getText()));
         }
     }
 }

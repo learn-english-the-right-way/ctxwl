@@ -36,6 +36,7 @@ public final class PostgreSqlConfiguration {
         config.addDataSourceProperty("url", url());
         config.setUsername(username());
         config.setPassword(password());
+        config.setTransactionIsolation("TRANSACTION_SERIALIZABLE");
         return new HikariDataSource(config);
     }
 

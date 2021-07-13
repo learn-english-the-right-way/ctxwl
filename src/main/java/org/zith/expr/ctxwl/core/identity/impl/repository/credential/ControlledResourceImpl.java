@@ -7,13 +7,11 @@ import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Stream;
 
-public class ControlledResourceImpl implements ControlledResource {
+public class ControlledResourceImpl implements ManagedControlledResource {
     private final ResourceEntity entity;
 
     private CredentialRepositoryImpl repository;
@@ -54,6 +52,7 @@ public class ControlledResourceImpl implements ControlledResource {
         var passwordEntity = new ResourcePasswordEntity();
 
         passwordEntity.setResourceId(entity.getId());
+        passwordEntity.setResource(entity);
         passwordEntity.setId(entity.getEntrySerial());
         entity.setEntrySerial(entity.getEntrySerial() + 1);
 
@@ -85,12 +84,16 @@ public class ControlledResourceImpl implements ControlledResource {
         var authenticationKeyEntity = new ResourceAuthenticationKeyEntity();
 
         authenticationKeyEntity.setResourceId(entity.getId());
+        authenticationKeyEntity.setResource(entity);
         authenticationKeyEntity.setId(entity.getEntrySerial());
         entity.setEntrySerial(entity.getEntrySerial() + 1);
 
         authenticationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
-        var code = repository.makeEntropicCode(36);
+        byte[] code;
+        do {
+            code = repository.makeEntropicCode(36);
+        } while (!checkCodeBeingAvailable(code));
         authenticationKeyEntity.setCode(code);
 
         authenticationKeyEntity.setCreation(repository.timestamp());
@@ -99,7 +102,6 @@ public class ControlledResourceImpl implements ControlledResource {
         effectiveCodeEntity.setCode(code);
         authenticationKeyEntity.setEffectiveCode(effectiveCodeEntity);
         repository.getSession().persist(effectiveCodeEntity);
-        authenticationKeyEntity.setCodeId(effectiveCodeEntity.getId());
 
         repository.getSession().persist(authenticationKeyEntity);
 
@@ -111,7 +113,17 @@ public class ControlledResourceImpl implements ControlledResource {
         return repository.makeAuthenticationKey(keyUsage, code);
     }
 
-    private void invalidateKey(CredentialManager.KeyUsage keyUsage) {
+    private boolean checkCodeBeingAvailable(byte[] code) {
+        var session = repository.getSession();
+        var cb = session.getCriteriaBuilder();
+        var q = cb.createQuery(Long.class);
+        var k = q.from(ResourceAuthenticationKeyCodeEntity.class);
+        q.select(cb.count(k)).where(cb.equal(k.get(ResourceAuthenticationKeyCodeEntity_.code), code));
+        return session.createQuery(q).uniqueResult() <= 0;
+    }
+
+    @Override
+    public void invalidateKey(CredentialManager.KeyUsage keyUsage) {
         var keyUsageName = repository.keyUsageName(keyUsage);
         entity.getPasswords()
                 .stream()
@@ -120,7 +132,10 @@ public class ControlledResourceImpl implements ControlledResource {
         entity.getAuthenticationKeys()
                 .stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
-                .forEach(e -> e.setInvalidation(repository.timestamp()));
+                .forEach(authenticationKeyEntity -> {
+                    authenticationKeyEntity.setEffectiveCode(null);
+                    authenticationKeyEntity.setInvalidation(repository.timestamp());
+                });
         entity.setPasswords(
                 this.entity.getPasswords().stream()
                         .filter(e -> !Objects.equals(e.getKeyUsage(), keyUsageName))
@@ -152,6 +167,88 @@ public class ControlledResourceImpl implements ControlledResource {
                 .map(e -> repository.makeAuthenticationKey(keyUsage, e.getCode()));
     }
 
+    @Override
+    public void importKey(
+            ControlledResource source,
+            CredentialManager.KeyUsage sourceKeyUsage,
+            CredentialManager.KeyUsage targetKeyUsage,
+            boolean migrate
+    ) {
+        if (source instanceof ManagedControlledResource managedSource) {
+            var sourceEntity = managedSource.getEntity();
+            var optionalSourcePasswordEntity = sourceEntity.getPasswords().stream()
+                    .filter(e -> Objects.equals(e.getKeyUsage(), repository.keyUsageName(sourceKeyUsage)))
+                    .findAny();
+            var optionalSourceAuthorizationKeyEntity = sourceEntity.getAuthenticationKeys().stream()
+                    .filter(e -> Objects.equals(e.getKeyUsage(), repository.keyUsageName(sourceKeyUsage)))
+                    .findAny();
+
+            if (optionalSourcePasswordEntity.isEmpty() && optionalSourceAuthorizationKeyEntity.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+
+            if (optionalSourceAuthorizationKeyEntity.isPresent() && !migrate) {
+                throw new IllegalArgumentException("Authorization keys cannot be imported without migration");
+            }
+
+            invalidateKey(targetKeyUsage);
+
+            if (migrate) {
+                managedSource.invalidateKey(sourceKeyUsage);
+            }
+
+            optionalSourcePasswordEntity.ifPresent(sourcePasswordEntity -> {
+                var passwordEntity = new ResourcePasswordEntity();
+
+                passwordEntity.setResourceId(entity.getId());
+                passwordEntity.setResource(entity);
+                passwordEntity.setId(entity.getEntrySerial());
+                entity.setEntrySerial(entity.getEntrySerial() + 1);
+
+                passwordEntity.setKeyUsage(repository.keyUsageName(targetKeyUsage));
+                passwordEntity.setAlgorithm(sourcePasswordEntity.getAlgorithm());
+                passwordEntity.setSalt(sourcePasswordEntity.getSalt());
+                passwordEntity.setHashedPassword(sourcePasswordEntity.getHashedPassword());
+                passwordEntity.setCreation(sourcePasswordEntity.getCreation());
+                passwordEntity.setExpiry(sourcePasswordEntity.getExpiry());
+                passwordEntity.setInvalidation(sourcePasswordEntity.getInvalidation());
+
+                repository.getSession().persist(passwordEntity);
+
+                entity.setPasswords(
+                        Stream.concat(entity.getPasswords().stream(), Stream.of(passwordEntity)).toList());
+            });
+
+            optionalSourceAuthorizationKeyEntity.ifPresent(sourceAuthorizationKeyEntity -> {
+                var authenticationKeyEntity = new ResourceAuthenticationKeyEntity();
+
+                authenticationKeyEntity.setResourceId(entity.getId());
+                authenticationKeyEntity.setResource(entity);
+                authenticationKeyEntity.setId(entity.getEntrySerial());
+                entity.setEntrySerial(entity.getEntrySerial() + 1);
+
+                authenticationKeyEntity.setKeyUsage(repository.keyUsageName(targetKeyUsage));
+                authenticationKeyEntity.setCode(sourceAuthorizationKeyEntity.getCode());
+                authenticationKeyEntity.setCreation(sourceAuthorizationKeyEntity.getCreation());
+                authenticationKeyEntity.setExpiry(sourceAuthorizationKeyEntity.getExpiry());
+                authenticationKeyEntity.setInvalidation(sourceAuthorizationKeyEntity.getInvalidation());
+
+                var effectiveCodeEntity = new ResourceAuthenticationKeyCodeEntity();
+                effectiveCodeEntity.setCode(authenticationKeyEntity.getCode());
+                authenticationKeyEntity.setEffectiveCode(effectiveCodeEntity);
+                repository.getSession().persist(effectiveCodeEntity);
+
+                entity.setAuthenticationKeys(Stream.concat(
+                        entity.getAuthenticationKeys().stream(),
+                        Stream.of(authenticationKeyEntity)
+                ).toList());
+            });
+        } else {
+            throw new IllegalArgumentException(
+                    "This controlled resource cannot import keys from a foreign controlled resource");
+        }
+    }
+
     public ControlledResourceImpl bind(CredentialRepositoryImpl repository) {
         this.repository = repository;
         return this;
@@ -165,6 +262,11 @@ public class ControlledResourceImpl implements ControlledResource {
         var controlledResource = new ResourceEntity().getDelegate().bind(repository);
         controlledResource.initialize(resourceType, identifier);
         return controlledResource;
+    }
+
+    @Override
+    public ResourceEntity getEntity() {
+        return entity;
     }
 
     private enum PasswordAlgorithm {

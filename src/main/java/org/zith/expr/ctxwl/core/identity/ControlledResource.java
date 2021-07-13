@@ -14,4 +14,11 @@ public interface ControlledResource {
     Optional<byte[]> getAuthenticationKeyCode(CredentialManager.KeyUsage keyUsage);
 
     Optional<String> getAuthenticationKey(CredentialManager.KeyUsage keyUsage);
+
+    void importKey(
+            ControlledResource source,
+            CredentialManager.KeyUsage sourceKeyUsage,
+            CredentialManager.KeyUsage targetKeyUsage,
+            boolean migrate
+    );
 }

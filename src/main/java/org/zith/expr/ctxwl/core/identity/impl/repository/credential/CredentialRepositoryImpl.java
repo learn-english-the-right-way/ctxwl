@@ -55,7 +55,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
                         .anyMatch(t -> Objects.equals(k.getKeyUsage(), keyUsageName(t.authenticationMethod())) &&
                                 Objects.equals(k.getResource().getType(), typeName(t.reflectiveType()))))
                 .map(ResourceAuthenticationKeyEntity::getResource)
-                .map(ResourceEntity::getDelegate).map(d -> d.bind(this));
+                .map(ResourceEntity::getDelegate).map(r -> r.bind(this));
     }
 
     Session getSession() {

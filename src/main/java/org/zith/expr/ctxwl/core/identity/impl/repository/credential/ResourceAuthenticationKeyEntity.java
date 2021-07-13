@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
-import static org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity_.CODE_ID;
 import static org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceAuthenticationKeyEntity_.RESOURCE_ID;
 
 @Entity
@@ -16,7 +15,6 @@ public class ResourceAuthenticationKeyEntity {
     private ResourceEntity resource;
     private String keyUsage;
     private byte[] code;
-    private Long codeId;
     private ResourceAuthenticationKeyCodeEntity effectiveCode;
     private Instant creation;
     private Instant expiry;
@@ -67,21 +65,8 @@ public class ResourceAuthenticationKeyEntity {
         this.code = code;
     }
 
-    public Long getCodeId() {
-        return codeId;
-    }
-
-    public void setCodeId(Long codeId) {
-        this.codeId = codeId;
-    }
-
-    @JoinColumn(
-            name = CODE_ID,
-            referencedColumnName = ResourceAuthenticationKeyCodeEntity_.ID,
-            insertable = false,
-            updatable = false
-    )
-    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "codeId", referencedColumnName = ResourceAuthenticationKeyCodeEntity_.ID)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     public ResourceAuthenticationKeyCodeEntity getEffectiveCode() {
         return effectiveCode;
     }

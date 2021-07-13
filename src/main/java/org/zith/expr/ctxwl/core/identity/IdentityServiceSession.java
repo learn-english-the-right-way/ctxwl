@@ -11,6 +11,8 @@ public interface IdentityServiceSession extends AutoCloseable {
 
     EmailRegistrationRepository emailRegistrationRepository();
 
+    UserRepository userRepository();
+
     @Override
     void close();
 }

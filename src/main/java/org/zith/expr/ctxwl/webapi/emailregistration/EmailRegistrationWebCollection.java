@@ -55,7 +55,6 @@ public class EmailRegistrationWebCollection {
                                 authenticationKey,
                                 Optional.empty(),
                                 Optional.empty(),
-                                Optional.empty(),
                                 Optional.empty()
                         ),
                         sendMail);
@@ -81,17 +80,19 @@ public class EmailRegistrationWebCollection {
                 })
                 .toList();
         try (var session = identityServiceSessionFactory.openSession()) {
-            var optionalEmailRegistration = session.emailRegistrationRepository().get(address);
+            return session.withTransaction(() -> {
+                var optionalEmailRegistration = session.emailRegistrationRepository().get(address);
 
-            if (optionalEmailRegistration.isEmpty()) {
-                throw new NotFoundException();
-            }
+                if (optionalEmailRegistration.isEmpty()) {
+                    throw new NotFoundException();
+                }
 
-            optionalEmailRegistration.ifPresent(emailRegistration -> {
+                var emailRegistration = optionalEmailRegistration.get();
+                var registrationResource = emailRegistration.getControlledResource();
                 var authorized = principals.stream()
                         .filter(p -> p.getType() == CredentialManager.ResourceType.EMAIL_REGISTRATION)
                         .map(SimplePrincipal::getIdentifier)
-                        .anyMatch(emailRegistration.getControlledResource().getIdentifier()::equals);
+                        .anyMatch(registrationResource.getIdentifier()::equals);
 
                 if (!authorized) {
                     throw new ForbiddenException();
@@ -103,8 +104,31 @@ public class EmailRegistrationWebCollection {
                 )) {
                     throw new ForbiddenException();
                 }
+
+                var user = emailRegistration.getEmail().getUser().orElseGet(() -> {
+                    var newUser = session.userRepository().register();
+                    emailRegistration.getEmail().link(newUser);
+                    newUser.getControlledResource().importKey(
+                            registrationResource,
+                            CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL,
+                            CredentialManager.KeyUsage.USER_LOGIN,
+                            false);
+                    return newUser;
+                });
+                var authenticationKey = user.getControlledResource().getAuthenticationKey(CredentialManager.KeyUsage.USER_AUTHENTICATION);
+
+                var confirmationAuthenticationKey =
+                        emailRegistration.getControlledResource()
+                                .getAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
+                return new EmailRegistrationWebDocument(
+                        emailRegistration.getEmail().getAddress(),
+                        Optional.empty(),
+                        confirmationAuthenticationKey,
+                        Optional.of(emailRegistration.getConfirmationCode()),
+                        authenticationKey,
+                        Optional.empty()
+                );
             });
         }
-        return document;
     }
 }

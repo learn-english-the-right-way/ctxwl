@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration;
 
 import com.google.common.base.Suppliers;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
+import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity_;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -26,7 +27,7 @@ public class EmailRegistrationEntity {
         this.id = id;
     }
 
-    @JoinColumn(name = "emailId", referencedColumnName = "id")
+    @JoinColumn(name = "emailId", referencedColumnName = EmailEntity_.ID)
     @ManyToOne
     public EmailEntity getEmail() {
         return email;

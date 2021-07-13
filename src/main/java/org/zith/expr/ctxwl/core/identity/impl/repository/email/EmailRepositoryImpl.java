@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.EmailRepository;
+import org.zith.expr.ctxwl.core.identity.UserRepository;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
 import java.util.Optional;
@@ -12,13 +13,15 @@ public class EmailRepositoryImpl implements EmailRepository {
 
     private final Session session;
     private final MailService mailService;
+    private final UserRepository userRepository;
 
-    public EmailRepositoryImpl(Session session, MailService mailService) {
+    public EmailRepositoryImpl(Session session, MailService mailService, UserRepository userRepository) {
         Preconditions.checkNotNull(session);
         Preconditions.checkNotNull(mailService);
 
         this.session = session;
         this.mailService = mailService;
+        this.userRepository = userRepository;
     }
 
     public EmailImpl ensure(String address) {
@@ -57,7 +60,11 @@ public class EmailRepositoryImpl implements EmailRepository {
         return address;
     }
 
-    public MailService getMailService() {
+    MailService getMailService() {
         return mailService;
+    }
+
+    UserRepository getUserRepository() {
+        return userRepository;
     }
 }
