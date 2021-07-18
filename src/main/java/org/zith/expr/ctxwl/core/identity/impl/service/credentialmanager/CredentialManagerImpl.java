@@ -35,6 +35,14 @@ public class CredentialManagerImpl implements CredentialManager {
     }
 
     @Override
+    public Optional<KeyUsage> resolveAuthenticatingKeyUsage(Domain domain, ResourceType type) {
+        return domain.getPrincipalTypes().stream()
+                .filter(pt -> pt.reflectiveType() == type)
+                .findAny()
+                .map(PrincipalType::authenticationMethod);
+    }
+
+    @Override
     public void close() {
 
     }

@@ -15,7 +15,7 @@ public interface CredentialSchema {
 
     void updateKeys(int offset, String[] keys);
 
-    boolean validatePassword(String password);
+    boolean validateStructureOfPassword(String password);
 
     String makeName(CredentialManager.ResourceType resourceType, String identifier);
 

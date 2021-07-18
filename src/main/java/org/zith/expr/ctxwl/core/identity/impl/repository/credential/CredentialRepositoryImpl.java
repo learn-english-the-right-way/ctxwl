@@ -36,8 +36,8 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     }
 
     @Override
-    public boolean validatePassword(String password) {
-        return credentialSchema.validatePassword(password);
+    public boolean validateStructureOfPassword(String password) {
+        return credentialSchema.validateStructureOfPassword(password);
     }
 
     @Override

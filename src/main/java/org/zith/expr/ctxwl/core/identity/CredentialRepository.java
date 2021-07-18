@@ -6,7 +6,7 @@ public interface CredentialRepository {
 
     ControlledResource ensure(CredentialManager.ResourceType resourceType, String identifier);
 
-    boolean validatePassword(String password);
+    boolean validateStructureOfPassword(String password);
 
     Optional<ControlledResource> lookupByAuthenticationKeyCode(CredentialManager.Domain domain, byte[] code);
 }

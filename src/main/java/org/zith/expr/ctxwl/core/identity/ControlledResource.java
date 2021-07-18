@@ -7,6 +7,8 @@ public interface ControlledResource {
 
     String getIdentifier();
 
+    boolean validatePassword(CredentialManager.KeyUsage keyUsage, String password);
+
     void setPassword(CredentialManager.KeyUsage keyUsage, String password);
 
     String ensureAuthenticationKey(CredentialManager.KeyUsage keyUsage);

@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.emailregistration;
+package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.zith.expr.ctxwl.webapi.session.SessionToken;

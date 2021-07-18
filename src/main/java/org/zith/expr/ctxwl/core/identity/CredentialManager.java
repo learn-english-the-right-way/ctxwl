@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 public interface CredentialManager extends AutoCloseable {
     Optional<ControlledResource> authenticate(Domain domain, String authenticationKey);
 
+    Optional<KeyUsage> resolveAuthenticatingKeyUsage(Domain domain, ResourceType type);
+
     @Override
     void close();
 
@@ -27,7 +29,7 @@ public interface CredentialManager extends AutoCloseable {
     }
 
     enum PrincipalType {
-        USER(ResourceType.USER, KeyUsage.USER_LOGIN),
+        USER(ResourceType.USER, KeyUsage.USER_AUTHENTICATION),
         EMAIL_REGISTRANT(ResourceType.EMAIL_REGISTRATION, KeyUsage.REGISTRATION_CONFIRMATION),
         ;
 

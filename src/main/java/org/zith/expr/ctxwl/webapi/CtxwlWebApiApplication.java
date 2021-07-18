@@ -5,7 +5,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.webapi.authentication.DefaultAuthenticationFilter;
-import org.zith.expr.ctxwl.webapi.emailregistration.EmailRegistrationWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationWebCollection;
 import org.zith.expr.ctxwl.webapi.mapper.ObjectMapperProvider;
 
 public class CtxwlWebApiApplication extends ResourceConfig {
@@ -21,6 +22,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
 
         register(DefaultAuthenticationFilter.class);
 
+        register(AuthenticationWebCollection.class);
         register(EmailRegistrationWebCollection.class);
     }
 

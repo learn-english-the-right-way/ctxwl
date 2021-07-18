@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.emailregistration;
+package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;

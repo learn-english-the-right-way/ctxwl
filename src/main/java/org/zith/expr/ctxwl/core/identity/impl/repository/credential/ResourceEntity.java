@@ -65,8 +65,8 @@ public class ResourceEntity {
         this.entrySerial = entrySerial;
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "resourceId", referencedColumnName = "id")
+    @OneToMany
+    @JoinColumn(name = "resourceId", referencedColumnName = "id", insertable = false, updatable = false)
     @Where(clause = "invalidation is null")
     public Collection<ResourcePasswordEntity> getPasswords() {
         return passwords;
@@ -76,8 +76,8 @@ public class ResourceEntity {
         this.passwords = passwords;
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "resourceId", referencedColumnName = "id")
+    @OneToMany
+    @JoinColumn(name = "resourceId", referencedColumnName = "id", insertable = false, updatable = false)
     @Where(clause = "invalidation is null")
     public Collection<ResourceAuthenticationKeyEntity> getAuthenticationKeys() {
         return authenticationKeys;

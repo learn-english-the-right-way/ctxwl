@@ -64,7 +64,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public boolean validatePassword(String password) {
+    public boolean validateStructureOfPassword(String password) {
         return PASSWORD_PATTERN.matcher(password).matches();
     }
 

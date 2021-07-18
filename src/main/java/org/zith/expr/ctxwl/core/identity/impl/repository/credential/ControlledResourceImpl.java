@@ -7,7 +7,6 @@ import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -44,8 +43,54 @@ public class ControlledResourceImpl implements ManagedControlledResource {
     }
 
     @Override
+    public boolean validatePassword(CredentialManager.KeyUsage keyUsage, String password) {
+        if (!repository.validateStructureOfPassword(password)) {
+            return false;
+        }
+
+        var optionalPasswordEntity = entity.getPasswords().stream()
+                .filter(e -> Objects.equals(e.getKeyUsage(), repository.keyUsageName(keyUsage)))
+                .findAny();
+
+        if (optionalPasswordEntity.isEmpty()) {
+            return false;
+        }
+
+        var passwordEntity = optionalPasswordEntity.get();
+
+        var optionalAlgorithm = Arrays.stream(PasswordAlgorithm.values())
+                .filter(a -> Objects.equals(passwordEntity.getAlgorithm(), a.name))
+                .findAny();
+
+        if (optionalAlgorithm.isEmpty()) {
+            return false;
+        }
+
+        var algorithm = optionalAlgorithm.get();
+
+        switch (algorithm) {
+            case BCRYPT_12 -> {
+                var optionalSalt =
+                        Optional.ofNullable(passwordEntity.getSalt()).map(BaseEncoding.base64()::decode);
+                var optionalHashedPassword =
+                        Optional.ofNullable(passwordEntity.getHashedPassword()).map(BaseEncoding.base64()::decode);
+                if (optionalSalt.isEmpty() || optionalHashedPassword.isEmpty()) {
+                    return false;
+                }
+                var salt = optionalSalt.get();
+                var hashPassword = optionalHashedPassword.get();
+                var expectedHashedPassword = password.getBytes(StandardCharsets.UTF_8);
+                return Arrays.equals(hashPassword, BCrypt.generate(expectedHashedPassword, salt, 12));
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    @Override
     public void setPassword(CredentialManager.KeyUsage keyUsage, String password) {
-        Preconditions.checkArgument(repository.validatePassword(password));
+        Preconditions.checkArgument(repository.validateStructureOfPassword(password));
 
         invalidateKey(keyUsage);
 
@@ -90,6 +135,7 @@ public class ControlledResourceImpl implements ManagedControlledResource {
 
         authenticationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
+        repository.getSession().flush();
         byte[] code;
         do {
             code = repository.makeEntropicCode(36);

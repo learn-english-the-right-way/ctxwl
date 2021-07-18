@@ -40,7 +40,7 @@ public class EmailRegistrationRepositoryImpl implements EmailRegistrationReposit
 
     @Override
     public EmailRegistration register(String address, String password) {
-        Preconditions.checkArgument(credentialRepository.validatePassword(password));
+        Preconditions.checkArgument(credentialRepository.validateStructureOfPassword(password));
 
         var email = emailRepository.ensure(address);
         return EmailRegistrationImpl.create(this, email, password, makeConfirmationCode(), clock.instant());
