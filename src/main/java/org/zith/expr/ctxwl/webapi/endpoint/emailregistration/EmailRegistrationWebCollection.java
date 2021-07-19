@@ -47,7 +47,7 @@ public class EmailRegistrationWebCollection {
                                 "Code: " + emailRegistration.getConfirmationCode()));
                 var authenticationKey =
                         emailRegistration.getControlledResource()
-                                .getAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
+                                .getApplicationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
                 return new Execution(
                         new EmailRegistrationWebDocument(
                                 emailRegistration.getEmail().getAddress(),
@@ -115,11 +115,11 @@ public class EmailRegistrationWebCollection {
                             false);
                     return newUser;
                 });
-                var authenticationKey = user.getControlledResource().getAuthenticationKey(CredentialManager.KeyUsage.USER_AUTHENTICATION);
+                var authenticationKey = user.getControlledResource().getApplicationKey(CredentialManager.KeyUsage.USER_AUTHENTICATION);
 
                 var confirmationAuthenticationKey =
                         emailRegistration.getControlledResource()
-                                .getAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
+                                .getApplicationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
                 return new EmailRegistrationWebDocument(
                         emailRegistration.getEmail().getAddress(),
                         Optional.empty(),

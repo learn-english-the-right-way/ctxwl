@@ -41,20 +41,20 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     }
 
     @Override
-    public Optional<ControlledResource> lookupByAuthenticationKeyCode(CredentialManager.Domain domain, byte[] code) {
+    public Optional<ControlledResource> lookupByApplicationKeyCode(CredentialManager.Domain domain, byte[] code) {
         var cb = session.getCriteriaBuilder();
-        var q = cb.createQuery(ResourceAuthenticationKeyEntity.class);
-        var rk = q.from(ResourceAuthenticationKeyEntity.class);
-        var rkc = rk.join(ResourceAuthenticationKeyEntity_.effectiveCode);
+        var q = cb.createQuery(ResourceApplicationKeyEntity.class);
+        var rk = q.from(ResourceApplicationKeyEntity.class);
+        var rkc = rk.join(ResourceApplicationKeyEntity_.effectiveCode);
         q.where(cb.and(
-                cb.equal(rkc.get(ResourceAuthenticationKeyCodeEntity_.code), code),
-                rk.get(ResourceAuthenticationKeyEntity_.keyUsage)
+                cb.equal(rkc.get(ResourceApplicationKeyCodeEntity_.code), code),
+                rk.get(ResourceApplicationKeyEntity_.keyUsage)
                         .in(domain.getKeyUsages().stream().map(this::keyUsageName).toList())));
         return session.createQuery(q).uniqueResultOptional()
                 .filter(k -> domain.getPrincipalTypes().stream()
                         .anyMatch(t -> Objects.equals(k.getKeyUsage(), keyUsageName(t.authenticationMethod())) &&
                                 Objects.equals(k.getResource().getType(), typeName(t.reflectiveType()))))
-                .map(ResourceAuthenticationKeyEntity::getResource)
+                .map(ResourceApplicationKeyEntity::getResource)
                 .map(ResourceEntity::getDelegate).map(r -> r.bind(this));
     }
 
@@ -78,8 +78,8 @@ public class CredentialRepositoryImpl implements CredentialRepository {
         return credentialSchema.makeName(resourceType, identifier);
     }
 
-    String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
-        return credentialSchema.makeAuthenticationKey(keyUsage, code);
+    String makeApplicationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
+        return credentialSchema.makeApplicationKey(keyUsage, code);
     }
 
     String keyUsageName(CredentialManager.KeyUsage keyUsage) {

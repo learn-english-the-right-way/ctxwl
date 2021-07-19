@@ -18,7 +18,7 @@ public class ResourceEntity {
     private String identifier;
     private Integer entrySerial;
     private Collection<ResourcePasswordEntity> passwords;
-    private Collection<ResourceAuthenticationKeyEntity> authenticationKeys;
+    private Collection<ResourceApplicationKeyEntity> applicationKeys;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -79,12 +79,12 @@ public class ResourceEntity {
     @OneToMany
     @JoinColumn(name = "resourceId", referencedColumnName = "id", insertable = false, updatable = false)
     @Where(clause = "invalidation is null")
-    public Collection<ResourceAuthenticationKeyEntity> getAuthenticationKeys() {
-        return authenticationKeys;
+    public Collection<ResourceApplicationKeyEntity> getApplicationKeys() {
+        return applicationKeys;
     }
 
-    public void setAuthenticationKeys(Collection<ResourceAuthenticationKeyEntity> authenticationKeys) {
-        this.authenticationKeys = authenticationKeys;
+    public void setApplicationKeys(Collection<ResourceApplicationKeyEntity> applicationKeys) {
+        this.applicationKeys = applicationKeys;
     }
 
     @Transient

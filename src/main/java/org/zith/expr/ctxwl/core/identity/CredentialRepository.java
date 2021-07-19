@@ -8,5 +8,5 @@ public interface CredentialRepository {
 
     boolean validateStructureOfPassword(String password);
 
-    Optional<ControlledResource> lookupByAuthenticationKeyCode(CredentialManager.Domain domain, byte[] code);
+    Optional<ControlledResource> lookupByApplicationKeyCode(CredentialManager.Domain domain, byte[] code);
 }

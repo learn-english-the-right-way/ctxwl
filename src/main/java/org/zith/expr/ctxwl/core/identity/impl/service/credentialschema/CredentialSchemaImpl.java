@@ -96,7 +96,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
+    public String makeApplicationKey(CredentialManager.KeyUsage keyUsage, byte[] code) {
         var keyType = metaKeyChain.current(keyUsage);
 
         var typeOffset = 4;
@@ -110,10 +110,10 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public Optional<byte[]> validateAuthenticationKey(Set<CredentialManager.KeyUsage> keyUsages, String authenticationKey) {
+    public Optional<byte[]> validateApplicationKey(Set<CredentialManager.KeyUsage> keyUsages, String applicationKey) {
         byte[] buffer;
         try {
-            buffer = BaseEncoding.base64().decode(authenticationKey);
+            buffer = BaseEncoding.base64().decode(applicationKey);
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

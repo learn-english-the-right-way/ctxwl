@@ -66,7 +66,7 @@ public class EmailRegistrationImpl implements EmailRegistration {
 
         var controlledResource = getControlledResource();
         controlledResource.setPassword(CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL, password);
-        controlledResource.ensureAuthenticationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
+        controlledResource.ensureApplicationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION);
     }
 
 

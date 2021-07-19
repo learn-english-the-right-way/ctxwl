@@ -24,12 +24,12 @@ public class CredentialManagerImpl implements CredentialManager {
     }
 
     @Override
-    public Optional<ControlledResource> authenticate(Domain domain, String authenticationKey) {
-        return credentialSchema.validateAuthenticationKey(domain.getKeyUsages(), authenticationKey)
+    public Optional<ControlledResource> authenticate(Domain domain, String applicationKey) {
+        return credentialSchema.validateApplicationKey(domain.getKeyUsages(), applicationKey)
                 .flatMap(code -> {
                     try (var session = identityServiceSessionFactory.openSession()) {
                         return session.withTransaction(() ->
-                                session.credentialRepository().lookupByAuthenticationKeyCode(domain, code));
+                                session.credentialRepository().lookupByApplicationKeyCode(domain, code));
                     }
                 });
     }

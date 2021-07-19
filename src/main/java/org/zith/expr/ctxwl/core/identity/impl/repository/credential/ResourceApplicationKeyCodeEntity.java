@@ -5,7 +5,7 @@ import org.hibernate.annotations.NaturalId;
 import javax.persistence.*;
 
 @Entity
-public class ResourceAuthenticationKeyCodeEntity {
+public class ResourceApplicationKeyCodeEntity {
     private Long id;
     private byte[] code;
 

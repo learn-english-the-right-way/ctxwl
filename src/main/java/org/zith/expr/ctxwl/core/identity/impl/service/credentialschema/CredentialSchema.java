@@ -23,8 +23,8 @@ public interface CredentialSchema {
 
     String keyUsageName(CredentialManager.KeyUsage keyUsage);
 
-    String makeAuthenticationKey(CredentialManager.KeyUsage keyUsage, byte[] code);
+    String makeApplicationKey(CredentialManager.KeyUsage keyUsage, byte[] code);
 
-    Optional<byte[]> validateAuthenticationKey(Set<CredentialManager.KeyUsage> keyUsages, String authenticationKey);
+    Optional<byte[]> validateApplicationKey(Set<CredentialManager.KeyUsage> keyUsages, String applicationKey);
 
 }

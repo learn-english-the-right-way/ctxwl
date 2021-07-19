@@ -25,7 +25,7 @@ public class ControlledResourceImpl implements ManagedControlledResource {
         entity.setIdentifier(identifier);
         entity.setEntrySerial(1);
         entity.setPasswords(Collections.emptySet());
-        entity.setAuthenticationKeys(Collections.emptySet());
+        entity.setApplicationKeys(Collections.emptySet());
         repository.getSession().persist(entity);
     }
 
@@ -118,53 +118,53 @@ public class ControlledResourceImpl implements ManagedControlledResource {
     }
 
     @Override
-    public String ensureAuthenticationKey(CredentialManager.KeyUsage keyUsage) {
-        var optionalExistingAuthenticationKey = getAuthenticationKey(keyUsage);
-        if (optionalExistingAuthenticationKey.isPresent()) {
-            return optionalExistingAuthenticationKey.get();
+    public String ensureApplicationKey(CredentialManager.KeyUsage keyUsage) {
+        var optionalExistingApplicationKey = getApplicationKey(keyUsage);
+        if (optionalExistingApplicationKey.isPresent()) {
+            return optionalExistingApplicationKey.get();
         }
 
         invalidateKey(keyUsage);
 
-        var authenticationKeyEntity = new ResourceAuthenticationKeyEntity();
+        var applicationKeyEntity = new ResourceApplicationKeyEntity();
 
-        authenticationKeyEntity.setResourceId(entity.getId());
-        authenticationKeyEntity.setResource(entity);
-        authenticationKeyEntity.setId(entity.getEntrySerial());
+        applicationKeyEntity.setResourceId(entity.getId());
+        applicationKeyEntity.setResource(entity);
+        applicationKeyEntity.setId(entity.getEntrySerial());
         entity.setEntrySerial(entity.getEntrySerial() + 1);
 
-        authenticationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
+        applicationKeyEntity.setKeyUsage(repository.keyUsageName(keyUsage));
 
         repository.getSession().flush();
         byte[] code;
         do {
             code = repository.makeEntropicCode(36);
         } while (!checkCodeBeingAvailable(code));
-        authenticationKeyEntity.setCode(code);
+        applicationKeyEntity.setCode(code);
 
-        authenticationKeyEntity.setCreation(repository.timestamp());
+        applicationKeyEntity.setCreation(repository.timestamp());
 
-        var effectiveCodeEntity = new ResourceAuthenticationKeyCodeEntity();
+        var effectiveCodeEntity = new ResourceApplicationKeyCodeEntity();
         effectiveCodeEntity.setCode(code);
-        authenticationKeyEntity.setEffectiveCode(effectiveCodeEntity);
+        applicationKeyEntity.setEffectiveCode(effectiveCodeEntity);
         repository.getSession().persist(effectiveCodeEntity);
 
-        repository.getSession().persist(authenticationKeyEntity);
+        repository.getSession().persist(applicationKeyEntity);
 
-        this.entity.setAuthenticationKeys(Stream.concat(
-                this.entity.getAuthenticationKeys().stream(),
-                Stream.of(authenticationKeyEntity)
+        this.entity.setApplicationKeys(Stream.concat(
+                this.entity.getApplicationKeys().stream(),
+                Stream.of(applicationKeyEntity)
         ).toList());
 
-        return repository.makeAuthenticationKey(keyUsage, code);
+        return repository.makeApplicationKey(keyUsage, code);
     }
 
     private boolean checkCodeBeingAvailable(byte[] code) {
         var session = repository.getSession();
         var cb = session.getCriteriaBuilder();
         var q = cb.createQuery(Long.class);
-        var k = q.from(ResourceAuthenticationKeyCodeEntity.class);
-        q.select(cb.count(k)).where(cb.equal(k.get(ResourceAuthenticationKeyCodeEntity_.code), code));
+        var k = q.from(ResourceApplicationKeyCodeEntity.class);
+        q.select(cb.count(k)).where(cb.equal(k.get(ResourceApplicationKeyCodeEntity_.code), code));
         return session.createQuery(q).uniqueResult() <= 0;
     }
 
@@ -175,42 +175,42 @@ public class ControlledResourceImpl implements ManagedControlledResource {
                 .stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
                 .forEach(e -> e.setInvalidation(repository.timestamp()));
-        entity.getAuthenticationKeys()
+        entity.getApplicationKeys()
                 .stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
-                .forEach(authenticationKeyEntity -> {
-                    authenticationKeyEntity.setEffectiveCode(null);
-                    authenticationKeyEntity.setInvalidation(repository.timestamp());
+                .forEach(applicationKeyEntity -> {
+                    applicationKeyEntity.setEffectiveCode(null);
+                    applicationKeyEntity.setInvalidation(repository.timestamp());
                 });
         entity.setPasswords(
                 this.entity.getPasswords().stream()
                         .filter(e -> !Objects.equals(e.getKeyUsage(), keyUsageName))
                         .toList());
-        entity.setAuthenticationKeys(
-                this.entity.getAuthenticationKeys().stream()
+        entity.setApplicationKeys(
+                this.entity.getApplicationKeys().stream()
                         .filter(e -> !Objects.equals(e.getKeyUsage(), keyUsageName))
                         .toList());
     }
 
     @Override
-    public Optional<byte[]> getAuthenticationKeyCode(CredentialManager.KeyUsage keyUsage) {
+    public Optional<byte[]> getApplicationKeyCode(CredentialManager.KeyUsage keyUsage) {
         var keyUsageName = repository.keyUsageName(keyUsage);
 
-        return entity.getAuthenticationKeys().stream()
+        return entity.getApplicationKeys().stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
                 .findAny()
-                .map(ResourceAuthenticationKeyEntity::getCode)
+                .map(ResourceApplicationKeyEntity::getCode)
                 .map(v -> Arrays.copyOf(v, v.length));
     }
 
     @Override
-    public Optional<String> getAuthenticationKey(CredentialManager.KeyUsage keyUsage) {
+    public Optional<String> getApplicationKey(CredentialManager.KeyUsage keyUsage) {
         var keyUsageName = repository.keyUsageName(keyUsage);
 
-        return entity.getAuthenticationKeys().stream()
+        return entity.getApplicationKeys().stream()
                 .filter(e -> Objects.equals(e.getKeyUsage(), keyUsageName))
                 .findAny()
-                .map(e -> repository.makeAuthenticationKey(keyUsage, e.getCode()));
+                .map(e -> repository.makeApplicationKey(keyUsage, e.getCode()));
     }
 
     @Override
@@ -225,7 +225,7 @@ public class ControlledResourceImpl implements ManagedControlledResource {
             var optionalSourcePasswordEntity = sourceEntity.getPasswords().stream()
                     .filter(e -> Objects.equals(e.getKeyUsage(), repository.keyUsageName(sourceKeyUsage)))
                     .findAny();
-            var optionalSourceAuthorizationKeyEntity = sourceEntity.getAuthenticationKeys().stream()
+            var optionalSourceAuthorizationKeyEntity = sourceEntity.getApplicationKeys().stream()
                     .filter(e -> Objects.equals(e.getKeyUsage(), repository.keyUsageName(sourceKeyUsage)))
                     .findAny();
 
@@ -266,27 +266,27 @@ public class ControlledResourceImpl implements ManagedControlledResource {
             });
 
             optionalSourceAuthorizationKeyEntity.ifPresent(sourceAuthorizationKeyEntity -> {
-                var authenticationKeyEntity = new ResourceAuthenticationKeyEntity();
+                var applicationKeyEntity = new ResourceApplicationKeyEntity();
 
-                authenticationKeyEntity.setResourceId(entity.getId());
-                authenticationKeyEntity.setResource(entity);
-                authenticationKeyEntity.setId(entity.getEntrySerial());
+                applicationKeyEntity.setResourceId(entity.getId());
+                applicationKeyEntity.setResource(entity);
+                applicationKeyEntity.setId(entity.getEntrySerial());
                 entity.setEntrySerial(entity.getEntrySerial() + 1);
 
-                authenticationKeyEntity.setKeyUsage(repository.keyUsageName(targetKeyUsage));
-                authenticationKeyEntity.setCode(sourceAuthorizationKeyEntity.getCode());
-                authenticationKeyEntity.setCreation(sourceAuthorizationKeyEntity.getCreation());
-                authenticationKeyEntity.setExpiry(sourceAuthorizationKeyEntity.getExpiry());
-                authenticationKeyEntity.setInvalidation(sourceAuthorizationKeyEntity.getInvalidation());
+                applicationKeyEntity.setKeyUsage(repository.keyUsageName(targetKeyUsage));
+                applicationKeyEntity.setCode(sourceAuthorizationKeyEntity.getCode());
+                applicationKeyEntity.setCreation(sourceAuthorizationKeyEntity.getCreation());
+                applicationKeyEntity.setExpiry(sourceAuthorizationKeyEntity.getExpiry());
+                applicationKeyEntity.setInvalidation(sourceAuthorizationKeyEntity.getInvalidation());
 
-                var effectiveCodeEntity = new ResourceAuthenticationKeyCodeEntity();
-                effectiveCodeEntity.setCode(authenticationKeyEntity.getCode());
-                authenticationKeyEntity.setEffectiveCode(effectiveCodeEntity);
+                var effectiveCodeEntity = new ResourceApplicationKeyCodeEntity();
+                effectiveCodeEntity.setCode(applicationKeyEntity.getCode());
+                applicationKeyEntity.setEffectiveCode(effectiveCodeEntity);
                 repository.getSession().persist(effectiveCodeEntity);
 
-                entity.setAuthenticationKeys(Stream.concat(
-                        entity.getAuthenticationKeys().stream(),
-                        Stream.of(authenticationKeyEntity)
+                entity.setApplicationKeys(Stream.concat(
+                        entity.getApplicationKeys().stream(),
+                        Stream.of(applicationKeyEntity)
                 ).toList());
             });
         } else {

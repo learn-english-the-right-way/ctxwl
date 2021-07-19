@@ -11,11 +11,11 @@ public interface ControlledResource {
 
     void setPassword(CredentialManager.KeyUsage keyUsage, String password);
 
-    String ensureAuthenticationKey(CredentialManager.KeyUsage keyUsage);
+    String ensureApplicationKey(CredentialManager.KeyUsage keyUsage);
 
-    Optional<byte[]> getAuthenticationKeyCode(CredentialManager.KeyUsage keyUsage);
+    Optional<byte[]> getApplicationKeyCode(CredentialManager.KeyUsage keyUsage);
 
-    Optional<String> getAuthenticationKey(CredentialManager.KeyUsage keyUsage);
+    Optional<String> getApplicationKey(CredentialManager.KeyUsage keyUsage);
 
     void importKey(
             ControlledResource source,

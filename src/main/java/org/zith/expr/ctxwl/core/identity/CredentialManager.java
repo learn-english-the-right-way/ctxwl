@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public interface CredentialManager extends AutoCloseable {
-    Optional<ControlledResource> authenticate(Domain domain, String authenticationKey);
+    Optional<ControlledResource> authenticate(Domain domain, String applicationKey);
 
     Optional<KeyUsage> resolveAuthenticatingKeyUsage(Domain domain, ResourceType type);
 

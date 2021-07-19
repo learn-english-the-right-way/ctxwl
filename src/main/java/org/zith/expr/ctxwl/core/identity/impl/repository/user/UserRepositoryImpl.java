@@ -24,7 +24,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User register() {
         var user = UserImpl.create(this);
-        user.getControlledResource().ensureAuthenticationKey(CredentialManager.KeyUsage.USER_AUTHENTICATION);
+        user.getControlledResource().ensureApplicationKey(CredentialManager.KeyUsage.USER_AUTHENTICATION);
         return user;
     }
 

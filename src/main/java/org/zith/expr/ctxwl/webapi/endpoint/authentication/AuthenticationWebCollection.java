@@ -79,7 +79,7 @@ public class AuthenticationWebCollection {
                 }
 
                 var authenticatingKeyUsage = optionalAuthenticatingKeyUsage.get();
-                var authenticationKey = controlledResource.ensureAuthenticationKey(authenticatingKeyUsage);
+                var authenticationKey = controlledResource.ensureApplicationKey(authenticatingKeyUsage);
 
                 return new ApplicationKeyChallengeResultWebDocument(authenticationKey);
             });
