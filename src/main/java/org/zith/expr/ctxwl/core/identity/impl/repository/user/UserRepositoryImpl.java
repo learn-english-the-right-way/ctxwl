@@ -5,6 +5,7 @@ import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.User;
 import org.zith.expr.ctxwl.core.identity.UserRepository;
+import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
 
 import java.time.Clock;
 import java.util.Optional;
@@ -15,7 +16,7 @@ public class UserRepositoryImpl implements UserRepository {
     private final Clock clock;
     private final CredentialRepository credentialRepository;
 
-    public UserRepositoryImpl(Session session, Clock clock, CredentialRepository credentialRepository) {
+    public UserRepositoryImpl(ComponentFactory componentFactory, Session session, Clock clock, CredentialRepository credentialRepository) {
         this.session = session;
         this.clock = clock;
         this.credentialRepository = credentialRepository;

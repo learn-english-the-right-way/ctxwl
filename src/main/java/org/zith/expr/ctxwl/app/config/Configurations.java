@@ -1,5 +1,7 @@
 package org.zith.expr.ctxwl.app.config;
 
+import org.zith.expr.ctxwl.common.configuration.Configuration;
+
 import java.util.Optional;
 import java.util.stream.Stream;
 

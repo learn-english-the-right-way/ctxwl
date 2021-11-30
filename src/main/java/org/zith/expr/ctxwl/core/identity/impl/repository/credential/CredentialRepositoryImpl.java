@@ -1,11 +1,13 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableBiMap;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
+import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 
 import java.time.Instant;
@@ -16,7 +18,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     private final Session session;
     private final CredentialSchema credentialSchema;
 
-    public CredentialRepositoryImpl(Session session, CredentialSchema credentialSchema) {
+    public CredentialRepositoryImpl(ComponentFactory componentFactory, Session session, CredentialSchema credentialSchema) {
         Preconditions.checkNotNull(session);
         Preconditions.checkNotNull(credentialSchema);
         this.session = session;
@@ -41,7 +43,10 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     }
 
     @Override
-    public Optional<ControlledResource> lookupByApplicationKeyCode(CredentialManager.Domain domain, byte[] code) {
+    public Optional<ControlledResource> lookupByApplicationKeyCode(
+            ImmutableBiMap<CredentialManager.ResourceType, CredentialManager.KeyUsage> keyUsages,
+            byte[] code
+    ) {
         var cb = session.getCriteriaBuilder();
         var q = cb.createQuery(ResourceApplicationKeyEntity.class);
         var rk = q.from(ResourceApplicationKeyEntity.class);
@@ -49,11 +54,11 @@ public class CredentialRepositoryImpl implements CredentialRepository {
         q.where(cb.and(
                 cb.equal(rkc.get(ResourceApplicationKeyCodeEntity_.code), code),
                 rk.get(ResourceApplicationKeyEntity_.keyUsage)
-                        .in(domain.getKeyUsages().stream().map(this::keyUsageName).toList())));
+                        .in(keyUsages.values().stream().map(this::keyUsageName).toList())));
         return session.createQuery(q).uniqueResultOptional()
-                .filter(k -> domain.getPrincipalTypes().stream()
-                        .anyMatch(t -> Objects.equals(k.getKeyUsage(), keyUsageName(t.authenticationMethod())) &&
-                                Objects.equals(k.getResource().getType(), typeName(t.reflectiveType()))))
+                .filter(k -> keyUsages.entrySet().stream()
+                        .anyMatch(e -> Objects.equals(k.getKeyUsage(), keyUsageName(e.getValue())) &&
+                                Objects.equals(k.getResource().getType(), typeName(e.getKey()))))
                 .map(ResourceApplicationKeyEntity::getResource)
                 .map(ResourceEntity::getDelegate).map(r -> r.bind(this));
     }

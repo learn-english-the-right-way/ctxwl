@@ -1,5 +1,7 @@
 package org.zith.expr.ctxwl.core.identity;
 
+import com.google.common.collect.ImmutableBiMap;
+
 import java.util.Optional;
 
 public interface CredentialRepository {
@@ -8,5 +10,8 @@ public interface CredentialRepository {
 
     boolean validateStructureOfPassword(String password);
 
-    Optional<ControlledResource> lookupByApplicationKeyCode(CredentialManager.Domain domain, byte[] code);
+    Optional<ControlledResource> lookupByApplicationKeyCode(
+            ImmutableBiMap<CredentialManager.ResourceType, CredentialManager.KeyUsage> keyUsages,
+            byte[] code
+    );
 }

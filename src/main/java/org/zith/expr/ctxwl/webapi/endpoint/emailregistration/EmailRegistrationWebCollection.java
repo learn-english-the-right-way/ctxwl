@@ -7,13 +7,14 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
+import org.zith.expr.ctxwl.webapi.access.ActiveResourceRole;
+import org.zith.expr.ctxwl.webapi.access.Principal;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
-import org.zith.expr.ctxwl.webapi.authentication.Authentication;
-import org.zith.expr.ctxwl.webapi.authentication.SimplePrincipal;
+import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Path("/email_registration")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -69,16 +70,10 @@ public class EmailRegistrationWebCollection {
     @Path("{address}")
     @PATCH
     @Authenticated
-    public EmailRegistrationWebDocument update(@PathParam("address") String address, EmailRegistrationWebDocument document) {
-        var principals = Authentication.principals(securityContext).stream()
-                .flatMap(principal -> {
-                    if (principal instanceof SimplePrincipal simplePrincipal) {
-                        return Stream.of(simplePrincipal);
-                    } else {
-                        return Stream.empty();
-                    }
-                })
-                .toList();
+    public EmailRegistrationWebDocument update(
+            @PathParam("address") String address,
+            EmailRegistrationWebDocument document
+    ) {
         try (var session = identityServiceSessionFactory.openSession()) {
             return session.withTransaction(() -> {
                 var optionalEmailRegistration = session.emailRegistrationRepository().get(address);
@@ -89,10 +84,13 @@ public class EmailRegistrationWebCollection {
 
                 var emailRegistration = optionalEmailRegistration.get();
                 var registrationResource = emailRegistration.getControlledResource();
-                var authorized = principals.stream()
-                        .filter(p -> p.getType() == CredentialManager.ResourceType.EMAIL_REGISTRATION)
-                        .map(SimplePrincipal::getIdentifier)
-                        .anyMatch(registrationResource.getIdentifier()::equals);
+                var authorized =
+                        CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()
+                                .map(Principal::roles)
+                                .flatMap(Collection::stream)
+                                .anyMatch(ActiveResourceRole.match(
+                                        CredentialManager.ResourceType.EMAIL_REGISTRATION,
+                                        registrationResource.getIdentifier()));
 
                 if (!authorized) {
                     throw new ForbiddenException();

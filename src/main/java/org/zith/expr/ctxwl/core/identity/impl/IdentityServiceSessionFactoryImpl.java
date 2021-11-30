@@ -1,23 +1,18 @@
 package org.zith.expr.ctxwl.core.identity.impl;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Strings;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.Action;
+import org.zith.expr.ctxwl.common.hibernate.LowerUnderscorePhysicalNamingStrategy;
+import org.zith.expr.ctxwl.common.hibernate.SuffixStripingImplicitNamingStrategy;
+import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
-import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceApplicationKeyCodeEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceApplicationKeyEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.ResourceEntity;
@@ -31,10 +26,10 @@ import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailServiceImpl;
 
 import javax.sql.DataSource;
 import java.time.Clock;
-import java.util.function.Function;
-import java.util.regex.Pattern;
 
 public class IdentityServiceSessionFactoryImpl implements IdentityServiceSessionFactory {
+
+    private final ComponentFactory componentFactory;
 
     private final DataSource dataSource;
     private final StandardServiceRegistry serviceRegistry;
@@ -45,13 +40,16 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
     private final Clock clock;
 
     public IdentityServiceSessionFactoryImpl(
+            ComponentFactory componentFactory,
             DataSource dataSource,
             StandardServiceRegistry serviceRegistry,
             Metadata metadata,
             SessionFactory sessionFactory,
-            CredentialSchema credentialSchema, MailService mailService,
+            CredentialSchema credentialSchema,
+            MailService mailService,
             Clock clock
     ) {
+        this.componentFactory = componentFactory;
         this.dataSource = dataSource;
         this.serviceRegistry = serviceRegistry;
         this.metadata = metadata;
@@ -63,20 +61,24 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
 
     @Override
     public IdentityServiceSession openSession() {
-        return IdentityServiceSessionImpl.create(sessionFactory, credentialSchema, mailService, clock);
+        return componentFactory.createIdentityServiceSessionImpl(sessionFactory, credentialSchema, mailService, clock);
     }
 
     public static IdentityServiceSessionFactoryImpl create(
+            ComponentFactory componentFactory,
             CredentialSchema credentialSchema,
             Clock clock,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
-        var dataSource = postgreSqlConfiguration.makeDataSource();
+        var dataSource =
+                postgreSqlConfiguration.makeDataSource(
+                        PostgreSqlConfiguration.TransactionIsolation.TRANSACTION_SERIALIZABLE
+                );
         var serviceRegistry =
                 new StandardServiceRegistryBuilder()
                         .applySetting(AvailableSettings.DATASOURCE, dataSource)
-                        .applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP)
+                        .applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP) // TODO
                         .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true)
                         .build();
         var metadata = new MetadataSources(serviceRegistry)
@@ -88,12 +90,13 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
                 .addAnnotatedClass(ResourceApplicationKeyCodeEntity.class)
                 .addAnnotatedClass(ResourcePasswordEntity.class)
                 .getMetadataBuilder()
-                .applyImplicitNamingStrategy(new IdentityServiceImplicitNamingStrategy())
-                .applyPhysicalNamingStrategy(new IdentityServicePhysicalNamingStrategy())
+                .applyImplicitNamingStrategy(SuffixStripingImplicitNamingStrategy.stripEntitySuffix())
+                .applyPhysicalNamingStrategy(new LowerUnderscorePhysicalNamingStrategy())
                 .build();
         var sessionFactory = metadata.getSessionFactoryBuilder().build();
         var mailService = MailServiceImpl.create(mailConfiguration);
         return new IdentityServiceSessionFactoryImpl(
+                componentFactory,
                 dataSource,
                 serviceRegistry,
                 metadata,
@@ -110,50 +113,4 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
         serviceRegistry.close();
     }
 
-    private static class IdentityServiceImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
-        @Override
-        protected String transformEntityName(EntityNaming entityNaming) {
-            var name = super.transformEntityName(entityNaming);
-            if (name.endsWith("Entity")) {
-                return name.substring(0, name.length() - 6);
-            } else {
-                return name;
-            }
-        }
-    }
-
-    private static class IdentityServicePhysicalNamingStrategy extends PhysicalNamingStrategyStandardImpl {
-
-        private final Function<String, String> tableNameMapper = makeTableNameMapper();
-        private final Function<String, String> columnNameMapper = makeColumnNameMapper();
-
-        private Function<String, String> makeTableNameMapper() {
-            return CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
-        }
-
-        private Function<String, String> makeColumnNameMapper() {
-            var baseConverter = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
-            var suffixPattern = Pattern.compile("^(.*?)(_?[\\p{Upper}\\p{Digit}]+)?$");
-            return name -> {
-                var m = suffixPattern.matcher(name);
-                if (!m.matches()) throw new IllegalStateException();
-                return baseConverter.convert(Strings.nullToEmpty(m.group(1)))
-                        + Strings.nullToEmpty(m.group(2)).toLowerCase();
-            };
-        }
-
-        @Override
-        public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment context) {
-            return convert(tableNameMapper, name, context);
-        }
-
-        @Override
-        public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment context) {
-            return convert(columnNameMapper, name, context);
-        }
-
-        private Identifier convert(Function<String, String> mapper, Identifier name, JdbcEnvironment context) {
-            return context.getIdentifierHelper().toIdentifier(mapper.apply(name.getText()));
-        }
-    }
 }

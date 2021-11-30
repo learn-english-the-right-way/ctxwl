@@ -3,10 +3,10 @@ package org.zith.expr.ctxwl.webapi.endpoint.authentication;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.SecurityContext;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
+import org.zith.expr.ctxwl.webapi.access.Realm;
 
 @Path("/authentication")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -16,15 +16,15 @@ public class AuthenticationWebCollection {
     private static final String AUTHENTICATION_METHOD_PREFIX_REGISTRATION_EMAIL = "registration.email:";
 
     private final IdentityService identityService;
-    private final SecurityContext securityContext;
+    private final Realm realm;
 
     @Inject
     public AuthenticationWebCollection(
             IdentityService identityService,
-            SecurityContext securityContext
+            Realm realm
     ) {
         this.identityService = identityService;
-        this.securityContext = securityContext;
+        this.realm = realm;
     }
 
     @POST
@@ -69,11 +69,7 @@ public class AuthenticationWebCollection {
                 }
 
                 var optionalAuthenticatingKeyUsage =
-                        identityService.credentialManager()
-                                .resolveAuthenticatingKeyUsage(
-                                        CredentialManager.Domain.GENERAL_ACCESS,
-                                        controlledResource.getType()
-                                );
+                        realm.resolveAuthenticatingKeyUsage(controlledResource.getType());
                 if (optionalAuthenticatingKeyUsage.isEmpty()) {
                     throw new ForbiddenException();
                 }

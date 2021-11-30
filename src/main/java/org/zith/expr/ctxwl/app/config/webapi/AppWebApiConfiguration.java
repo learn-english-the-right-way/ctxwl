@@ -1,7 +1,7 @@
 package org.zith.expr.ctxwl.app.config.webapi;
 
-import org.zith.expr.ctxwl.app.config.Configuration;
 import org.zith.expr.ctxwl.app.config.Configurations;
+import org.zith.expr.ctxwl.common.configuration.Configuration;
 
 import java.util.Optional;
 

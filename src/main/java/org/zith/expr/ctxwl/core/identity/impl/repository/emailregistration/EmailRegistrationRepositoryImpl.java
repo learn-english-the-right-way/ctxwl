@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.EmailRegistrationRepository;
+import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.CredentialRepositoryImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryImpl;
@@ -21,7 +22,7 @@ public class EmailRegistrationRepositoryImpl implements EmailRegistrationReposit
     private final Random random;
 
     public EmailRegistrationRepositoryImpl(
-            Session session,
+            ComponentFactory componentFactory, Session session,
             Clock clock,
             EmailRepositoryImpl emailRepository,
             CredentialRepositoryImpl credentialRepository

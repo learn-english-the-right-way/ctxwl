@@ -118,7 +118,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
             return Optional.empty();
         }
 
-        if (buffer.length<36) {
+        if (buffer.length < 36) {
             return Optional.empty();
         }
 

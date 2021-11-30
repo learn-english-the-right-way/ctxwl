@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.EmailRepository;
 import org.zith.expr.ctxwl.core.identity.UserRepository;
+import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
 import java.util.Optional;
@@ -15,7 +16,7 @@ public class EmailRepositoryImpl implements EmailRepository {
     private final MailService mailService;
     private final UserRepository userRepository;
 
-    public EmailRepositoryImpl(Session session, MailService mailService, UserRepository userRepository) {
+    public EmailRepositoryImpl(ComponentFactory componentFactory, Session session, MailService mailService, UserRepository userRepository) {
         Preconditions.checkNotNull(session);
         Preconditions.checkNotNull(mailService);
 
@@ -32,6 +33,7 @@ public class EmailRepositoryImpl implements EmailRepository {
                 .orElseGet(() -> {
                     var freshEntity = new EmailEntity();
                     freshEntity.setAddress(cAddress);
+                    interceptInsertion(freshEntity);
                     session.persist(freshEntity);
                     return freshEntity;
                 });
@@ -66,5 +68,8 @@ public class EmailRepositoryImpl implements EmailRepository {
 
     UserRepository getUserRepository() {
         return userRepository;
+    }
+
+    protected void interceptInsertion(EmailEntity freshEntity) {
     }
 }

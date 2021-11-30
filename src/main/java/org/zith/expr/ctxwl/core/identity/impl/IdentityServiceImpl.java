@@ -1,17 +1,18 @@
 package org.zith.expr.ctxwl.core.identity.impl;
 
+import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSession;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
-import org.zith.expr.ctxwl.core.identity.config.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialmanager.CredentialManagerImpl;
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchemaImpl;
 
 import java.time.Clock;
 import java.util.Random;
 
-public class IdentityServiceImpl implements StandardIdentityService {
+public class IdentityServiceImpl implements IdentityService {
     private final IdentityServiceSessionFactory identityServiceSessionFactory;
     private final CredentialManager credentialManager;
     private final Clock clock;
@@ -42,14 +43,20 @@ public class IdentityServiceImpl implements StandardIdentityService {
         credentialManager.close();
     }
 
-    public static StandardIdentityService create(
-            Clock clock,
+    public static IdentityServiceImpl create(
+            ComponentFactory componentFactory, Clock clock,
             Random random,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
         var credentialSchema = CredentialSchemaImpl.create(random, clock);
-        var identityServiceSessionFactory = IdentityServiceSessionFactoryImpl.create(credentialSchema, clock, postgreSqlConfiguration, mailConfiguration);
+        var identityServiceSessionFactory =
+                componentFactory.createIdentityServiceSessionFactoryImpl(
+                        credentialSchema,
+                        clock,
+                        postgreSqlConfiguration,
+                        mailConfiguration
+                );
         var credentialManager = CredentialManagerImpl.create(credentialSchema, identityServiceSessionFactory);
         return new IdentityServiceImpl(identityServiceSessionFactory, credentialManager, clock);
     }

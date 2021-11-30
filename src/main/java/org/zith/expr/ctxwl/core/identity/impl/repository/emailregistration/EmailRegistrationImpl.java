@@ -1,9 +1,9 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration;
 
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailImpl;
 
 import java.time.Instant;

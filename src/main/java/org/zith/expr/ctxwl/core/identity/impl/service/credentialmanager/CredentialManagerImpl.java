@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl.service.credentialmanager;
 
+import com.google.common.collect.ImmutableBiMap;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
@@ -24,22 +25,18 @@ public class CredentialManagerImpl implements CredentialManager {
     }
 
     @Override
-    public Optional<ControlledResource> authenticate(Domain domain, String applicationKey) {
-        return credentialSchema.validateApplicationKey(domain.getKeyUsages(), applicationKey)
+    public Optional<ControlledResource> verifyApplicationKeyAndGetResource(
+            ImmutableBiMap<ResourceType, KeyUsage> keyUsagesByResourceTypes,
+            String applicationKey
+    ) {
+        return credentialSchema.validateApplicationKey(keyUsagesByResourceTypes.values(), applicationKey)
                 .flatMap(code -> {
                     try (var session = identityServiceSessionFactory.openSession()) {
                         return session.withTransaction(() ->
-                                session.credentialRepository().lookupByApplicationKeyCode(domain, code));
+                                session.credentialRepository()
+                                        .lookupByApplicationKeyCode(keyUsagesByResourceTypes, code));
                     }
                 });
-    }
-
-    @Override
-    public Optional<KeyUsage> resolveAuthenticatingKeyUsage(Domain domain, ResourceType type) {
-        return domain.getPrincipalTypes().stream()
-                .filter(pt -> pt.reflectiveType() == type)
-                .findAny()
-                .map(PrincipalType::authenticationMethod);
     }
 
     @Override

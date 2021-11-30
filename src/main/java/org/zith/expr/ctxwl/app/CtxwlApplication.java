@@ -6,7 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.zith.expr.ctxwl.app.config.AppConfigurator;
-import org.zith.expr.ctxwl.core.identity.impl.StandardIdentityService;
+import org.zith.expr.ctxwl.core.identity.IdentityServiceCreator;
+import org.zith.expr.ctxwl.core.reading.ReadingServiceCreator;
 import org.zith.expr.ctxwl.webapi.CtxwlWebApiApplication;
 
 import java.io.File;
@@ -76,13 +77,18 @@ public class CtxwlApplication {
         var configuration = configurator.configuration();
 
         var identityService =
-                StandardIdentityService.create(
+                IdentityServiceCreator.create(
                         configuration.core().identity().postgreSql().effectiveConfiguration(),
                         configuration.core().identity().mail().effectiveConfiguration());
 
+        var readingService =
+                ReadingServiceCreator.create(
+                        configuration.core().reading().postgreSql().effectiveConfiguration(),
+                        configuration.core().reading().mongoDb().effectiveConfiguration());
+
         var server = JettyHttpContainerFactory.createServer(
                 URI.create(configuration.webApi().effectiveBaseUri()),
-                new CtxwlWebApiApplication(identityService));
+                new CtxwlWebApiApplication(identityService, readingService));
         server.start();
     }
 

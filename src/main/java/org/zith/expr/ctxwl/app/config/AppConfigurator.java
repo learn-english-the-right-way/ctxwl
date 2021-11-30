@@ -1,36 +1,18 @@
 package org.zith.expr.ctxwl.app.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.jetbrains.annotations.NotNull;
+import org.zith.expr.ctxwl.common.configuration.AbstractConfigurator;
 
-import javax.annotation.concurrent.NotThreadSafe;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+public final class AppConfigurator extends AbstractConfigurator<AppConfiguration> {
 
-@NotThreadSafe
-public final class AppConfigurator {
-    private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-    private AppConfiguration current = AppConfiguration.empty();
-
-    private AppConfigurator() {
+    @NotNull
+    @Override
+    protected AppConfiguration emptyConfiguration() {
+        return AppConfiguration.empty();
     }
 
-    public static AppConfigurator create() {
-        return new AppConfigurator();
-    }
-
-    public void load(File file) {
-        AppConfiguration configuration;
-        try {
-            configuration = objectMapper.readValue(file, AppConfiguration.class);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        current = current.merge(configuration);
-    }
-
-    public AppConfiguration configuration() {
-        return current;
+    @Override
+    protected Class<AppConfiguration> configurationClass() {
+        return AppConfiguration.class;
     }
 }

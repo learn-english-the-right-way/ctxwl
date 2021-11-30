@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.app.config;
 
 import org.zith.expr.ctxwl.app.config.core.AppCoreConfiguration;
 import org.zith.expr.ctxwl.app.config.webapi.AppWebApiConfiguration;
+import org.zith.expr.ctxwl.common.configuration.Configuration;
 
 public record AppConfiguration(
         AppCoreConfiguration core,
