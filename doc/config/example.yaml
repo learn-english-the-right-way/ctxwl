@@ -1,0 +1,21 @@
+core:
+  identity:
+    postgreSql:
+      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
+      username: "USER_NAME"
+      password: "PASSWORD"
+    mail:
+      host: HOST
+      address: "USER@DOMAIN.COM"
+      port: 587
+      method: plain
+      plainAuthentication:
+        username: USER_NAME
+        password: PASSWORD
+  reading:
+    postgreSql:
+      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
+      username: "USER_NAME"
+      password: "PASSWORD"
+    mongoDb:
+      uri: "mongodb://HOST/DB_NAME"
