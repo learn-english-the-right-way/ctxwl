@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.access;
+package org.zith.expr.ctxwl.webapi.accesscontrol;
 
 import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;

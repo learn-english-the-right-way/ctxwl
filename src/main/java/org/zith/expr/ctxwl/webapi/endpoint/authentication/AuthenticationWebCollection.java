@@ -6,7 +6,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
-import org.zith.expr.ctxwl.webapi.access.Realm;
+import org.zith.expr.ctxwl.webapi.accesscontrol.Realm;
 
 @Path("/authentication")
 @Consumes(MediaType.APPLICATION_JSON)

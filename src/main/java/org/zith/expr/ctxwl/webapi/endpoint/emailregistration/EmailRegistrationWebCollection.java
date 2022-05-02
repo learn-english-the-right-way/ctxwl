@@ -7,8 +7,8 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
-import org.zith.expr.ctxwl.webapi.access.ActiveResourceRole;
-import org.zith.expr.ctxwl.webapi.access.Principal;
+import org.zith.expr.ctxwl.webapi.accesscontrol.ActiveResourceRole;
+import org.zith.expr.ctxwl.webapi.accesscontrol.Principal;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 

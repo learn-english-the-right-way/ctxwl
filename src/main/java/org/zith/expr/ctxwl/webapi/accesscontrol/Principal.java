@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.access;
+package org.zith.expr.ctxwl.webapi.accesscontrol;
 
 import java.util.List;
 

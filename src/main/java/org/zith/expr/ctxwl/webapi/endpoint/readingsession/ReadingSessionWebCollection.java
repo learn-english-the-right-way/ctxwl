@@ -8,9 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
-import org.zith.expr.ctxwl.webapi.access.ActiveResourceRole;
-import org.zith.expr.ctxwl.webapi.access.ApplicationKeyRole;
-import org.zith.expr.ctxwl.webapi.access.Principal;
+import org.zith.expr.ctxwl.webapi.accesscontrol.ActiveResourceRole;
+import org.zith.expr.ctxwl.webapi.accesscontrol.ApplicationKeyRole;
+import org.zith.expr.ctxwl.webapi.accesscontrol.Principal;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 

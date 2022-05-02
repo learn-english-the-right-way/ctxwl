@@ -1,9 +1,8 @@
-package org.zith.expr.ctxwl.webapi.access;
+package org.zith.expr.ctxwl.webapi.accesscontrol;
 
 import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 abstract class AbstractActiveResourceRole extends AbstractRole implements ActiveResourceRole {
