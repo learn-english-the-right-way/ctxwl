@@ -5,61 +5,72 @@ import org.zith.expr.ctxwl.webapi.common.WebApiDataExceptionExplainer;
 import org.zith.expr.ctxwl.webapi.mapper.SimpleExceptionMapper;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EmailRegistrationExceptionMapper extends SimpleExceptionMapper<EmailRegistrationException> {
     @Inject
     public EmailRegistrationExceptionMapper(WebApiDataExceptionExplainer webApiDataExceptionExplainer) {
         super(
-                new EmailRegistrationExceptionExplainer(),
+                EmailRegistrationExceptionExplainer.create(
+                        EmailRegistrationErrorCode.INVALID_REQUEST,
+                        EmailRegistrationException.class,
+                        (code, exception) -> SimpleCause.create(code, "You request is invalid.")
+                ),
                 List.of(
-                        new UnauthorizedEmailAddressExceptionExplainer(),
-                        new InvalidConfirmationCodeExceptionExplainer()
+                        EmailRegistrationExceptionExplainer.create(
+                                EmailRegistrationErrorCode.UNAUTHORIZED_EMAIL_ADDRESS,
+                                EmailRegistrationException.UnauthorizedEmailAddressException.class,
+                                (code, exception) -> SimpleCause.create(
+                                        code,
+                                        "You are not authorized to confirm the given email address.")
+                        ),
+                        EmailRegistrationExceptionExplainer.create(
+                                EmailRegistrationErrorCode.INVALID_CONFIRMATION_CODE,
+                                EmailRegistrationException.InvalidConfirmationCodeException.class,
+                                (code, exception) -> SimpleCause.create(
+                                        code,
+                                        "The confirmation code you provided is invalid.")
+                        )
                 ),
                 List.of(webApiDataExceptionExplainer));
     }
 
-    private static class EmailRegistrationExceptionExplainer implements Explainer<EmailRegistrationException> {
-        private final EmailRegistrationErrorCodeAdapter code =
-                new EmailRegistrationErrorCodeAdapter(EmailRegistrationErrorCode.INVALID_REQUEST);
+    private static class EmailRegistrationExceptionExplainer<E extends EmailRegistrationException> implements Explainer<E> {
 
-        @Override
-        public Class<EmailRegistrationException> exceptionClass() {
-            return EmailRegistrationException.class;
+        private final EmailRegistrationErrorCodeAdapter code;
+        private final Class<E> exceptionClass;
+        private final CauseMaker<E> causeMaker;
+
+        private EmailRegistrationExceptionExplainer(
+                EmailRegistrationErrorCode code,
+                Class<E> exceptionClass,
+                CauseMaker<E> causeMaker
+        ) {
+            Objects.requireNonNull(code);
+            Objects.requireNonNull(exceptionClass);
+            this.code = new EmailRegistrationErrorCodeAdapter(code);
+            this.exceptionClass = exceptionClass;
+            this.causeMaker = causeMaker;
         }
 
         @Override
-        public Cause explain(EmailRegistrationException exception) {
-            return SimpleCause.create(code, "You request is invalid.");
-        }
-    }
-
-    private static class UnauthorizedEmailAddressExceptionExplainer implements Explainer<UnauthorizedEmailAddressException> {
-        private final EmailRegistrationErrorCodeAdapter code =
-                new EmailRegistrationErrorCodeAdapter(EmailRegistrationErrorCode.UNAUTHORIZED_EMAIL_ADDRESS);
-
-        @Override
-        public Class<UnauthorizedEmailAddressException> exceptionClass() {
-            return UnauthorizedEmailAddressException.class;
+        public Class<E> exceptionClass() {
+            return exceptionClass;
         }
 
         @Override
-        public Cause explain(UnauthorizedEmailAddressException exception) {
-            return SimpleCause.create(code, "You are not authorized to confirm the given email address.");
-        }
-    }
-
-    private static class InvalidConfirmationCodeExceptionExplainer implements Explainer<InvalidConfirmationCodeException> {
-        private final EmailRegistrationErrorCodeAdapter code =
-                new EmailRegistrationErrorCodeAdapter(EmailRegistrationErrorCode.INVALID_CONFIRMATION_CODE);
-
-        @Override
-        public Class<InvalidConfirmationCodeException> exceptionClass() {
-            return InvalidConfirmationCodeException.class;
+        public Cause explain(E exception) {
+            return causeMaker.makeCause(code, exception);
         }
 
-        @Override
-        public Cause explain(InvalidConfirmationCodeException exception) {
-            return SimpleCause.create(code, "The confirmation code you provided is invalid.");
+        public static <E extends EmailRegistrationException> EmailRegistrationExceptionExplainer<E>
+        create(EmailRegistrationErrorCode code, Class<E> exceptionClass, CauseMaker<E> causeMaker) {
+            return new EmailRegistrationExceptionExplainer<E>(code, exceptionClass, causeMaker);
+        }
+
+        public interface CauseMaker<E extends EmailRegistrationException> {
+            Cause makeCause(Code code, E exception);
         }
     }
+
 }

@@ -41,12 +41,12 @@ public class AuthenticationWebCollection {
                     var key = authenticationMethod.substring(AUTHENTICATION_METHOD_PREFIX_USER_EMAIL.length());
                     var optionalEmail = session.emailRepository().get(key);
                     if (optionalEmail.isEmpty()) {
-                        throw new InvalidCredentialException();
+                        throw new AuthenticationException.InvalidCredentialException();
                     }
                     var email = optionalEmail.get();
                     var optionalUser = email.getUser();
                     if (optionalUser.isEmpty()) {
-                        throw new InvalidCredentialException();
+                        throw new AuthenticationException.InvalidCredentialException();
                     }
                     var user = optionalUser.get();
                     controlledResource = user.getControlledResource();
@@ -55,23 +55,23 @@ public class AuthenticationWebCollection {
                     var key = authenticationMethod.substring(AUTHENTICATION_METHOD_PREFIX_REGISTRATION_EMAIL.length());
                     var optionalEmailRegistration = session.emailRegistrationRepository().get(key);
                     if (optionalEmailRegistration.isEmpty()) {
-                        throw new InvalidCredentialException();
+                        throw new AuthenticationException.InvalidCredentialException();
                     }
                     var emailRegistration = optionalEmailRegistration.get();
                     controlledResource = emailRegistration.getControlledResource();
                     loginKeyUsage = CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL;
                 } else {
-                    throw new UnsupportedAuthenticationMethodException(authenticationMethod);
+                    throw new AuthenticationException.UnsupportedAuthenticationMethodException(authenticationMethod.replaceAll(":.*$", ""));
                 }
 
                 if (!controlledResource.validatePassword(loginKeyUsage, document.password())) {
-                    throw new InvalidCredentialException();
+                    throw new AuthenticationException.InvalidCredentialException();
                 }
 
                 var optionalAuthenticatingKeyUsage =
                         realm.resolveAuthenticatingKeyUsage(controlledResource.getType());
                 if (optionalAuthenticatingKeyUsage.isEmpty()) {
-                    throw new InvalidCredentialException();
+                    throw new AuthenticationException.InvalidCredentialException();
                 }
 
                 var authenticatingKeyUsage = optionalAuthenticatingKeyUsage.get();
