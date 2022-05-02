@@ -79,7 +79,7 @@ public class EmailRegistrationWebCollection {
                 var optionalEmailRegistration = session.emailRegistrationRepository().get(address);
 
                 if (optionalEmailRegistration.isEmpty()) {
-                    throw new NotFoundException();
+                    throw new UnauthorizedEmailAddressException();
                 }
 
                 var emailRegistration = optionalEmailRegistration.get();
@@ -93,14 +93,14 @@ public class EmailRegistrationWebCollection {
                                         registrationResource.getIdentifier()));
 
                 if (!authorized) {
-                    throw new ForbiddenException();
+                    throw new UnauthorizedEmailAddressException();
                 }
 
                 if (!Objects.equals(
                         Optional.of(emailRegistration.getConfirmationCode()),
                         document.confirmationCode()
                 )) {
-                    throw new ForbiddenException();
+                    throw new InvalidConfirmationCodeException();
                 }
 
                 var user = emailRegistration.getEmail().getUser().orElseGet(() -> {

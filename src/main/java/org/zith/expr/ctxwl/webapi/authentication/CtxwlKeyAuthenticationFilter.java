@@ -32,7 +32,7 @@ public class CtxwlKeyAuthenticationFilter implements ContainerRequestFilter {
                         .toList());
 
         if (optionalPrincipal.isEmpty()) {
-            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+            throw new CtxwlKeyAuthenticationException();
         } else {
             requestContext.setSecurityContext(CtxwlKeySecurityContext.create(
                     requestContext.getSecurityContext(),

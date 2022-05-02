@@ -8,10 +8,14 @@ import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.webapi.access.Realm;
 import org.zith.expr.ctxwl.webapi.access.RealmFactory;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationFilter;
+import org.zith.expr.ctxwl.webapi.common.WebApiDataExceptionExplainer;
+import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationExceptionMapper;
 import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationExceptionMapper;
 import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry.ReadingHistoryEntryWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionWebCollection;
+import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationExceptionMapper;
 import org.zith.expr.ctxwl.webapi.mapper.ObjectMapperProvider;
 
 public class CtxwlWebApiApplication extends ResourceConfig {
@@ -26,10 +30,14 @@ public class CtxwlWebApiApplication extends ResourceConfig {
 
         property("jersey.config.server.wadl.disableWadl", "true");
         register(ObjectMapperProvider.class);
+
         register(CtxwlKeyAuthenticationFilter.class);
+        register(CtxwlKeyAuthenticationExceptionMapper.class);
 
         register(AuthenticationWebCollection.class);
+        register(AuthenticationExceptionMapper.class);
         register(EmailRegistrationWebCollection.class);
+        register(EmailRegistrationExceptionMapper.class);
         register(ReadingHistoryEntryWebCollection.class);
         register(ReadingSessionWebCollection.class);
     }
@@ -40,6 +48,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
             bind(identityService).to(IdentityService.class).to(IdentityServiceSessionFactory.class);
             bind(readingService).to(ReadingService.class);
             bindFactory(RealmFactory.class).to(Realm.class);
+            bind(WebApiDataExceptionExplainer.class).to(WebApiDataExceptionExplainer.class);
         }
     }
 }
