@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class CtxwlKeyPrincipal implements Principal {
-    private final org.zith.expr.ctxwl.webapi.accesscontrol.Principal delegate;
+    private final org.zith.expr.ctxwl.core.accesscontrol.Principal delegate;
 
-    private CtxwlKeyPrincipal(org.zith.expr.ctxwl.webapi.accesscontrol.Principal principal) {
+    private CtxwlKeyPrincipal(org.zith.expr.ctxwl.core.accesscontrol.Principal principal) {
         delegate = principal;
     }
 
@@ -19,11 +19,11 @@ public class CtxwlKeyPrincipal implements Principal {
     }
 
     @NotNull
-    public org.zith.expr.ctxwl.webapi.accesscontrol.Principal getDelegate() {
+    public org.zith.expr.ctxwl.core.accesscontrol.Principal getDelegate() {
         return delegate;
     }
 
-    public static Optional<org.zith.expr.ctxwl.webapi.accesscontrol.Principal> resolveDelegate(Principal principal) {
+    public static Optional<org.zith.expr.ctxwl.core.accesscontrol.Principal> resolveDelegate(Principal principal) {
         if (principal instanceof CtxwlKeyPrincipal ctxwlKeyPrincipal) {
             return Optional.of(ctxwlKeyPrincipal.getDelegate());
         } else {
@@ -32,7 +32,7 @@ public class CtxwlKeyPrincipal implements Principal {
     }
 
     @NotNull
-    static CtxwlKeyPrincipal create(org.zith.expr.ctxwl.webapi.accesscontrol.Principal principal) {
+    static CtxwlKeyPrincipal create(org.zith.expr.ctxwl.core.accesscontrol.Principal principal) {
         return new CtxwlKeyPrincipal(Objects.requireNonNull(principal));
     }
 }

@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.accesscontrol;
+package org.zith.expr.ctxwl.core.accesscontrol;
 
 import com.google.common.base.Suppliers;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;

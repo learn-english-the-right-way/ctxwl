@@ -1,9 +1,10 @@
-package org.zith.expr.ctxwl.webapi.accesscontrol;
+package org.zith.expr.ctxwl.webapi.authentication;
 
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.Factory;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
+import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 
 public class RealmFactory implements Factory<Realm> {
     private final IdentityService identityService;

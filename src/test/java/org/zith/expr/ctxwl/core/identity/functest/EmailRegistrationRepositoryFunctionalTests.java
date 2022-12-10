@@ -2,7 +2,7 @@ package org.zith.expr.ctxwl.core.identity.functest;
 
 import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
-import org.zith.expr.ctxwl.webapi.accesscontrol.ActiveResourceRole;
+import org.zith.expr.ctxwl.core.accesscontrol.ActiveResourceRole;
 
 import java.util.List;
 

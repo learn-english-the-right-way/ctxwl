@@ -7,8 +7,8 @@ import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.InterceptedIdentityServiceCreator;
 import org.zith.expr.ctxwl.core.identity.functest.config.IdentityServiceTestConfiguration;
 import org.zith.expr.ctxwl.core.identity.functest.config.IdentityServiceTestConfigurator;
-import org.zith.expr.ctxwl.webapi.accesscontrol.Realm;
-import org.zith.expr.ctxwl.webapi.accesscontrol.RealmFactory;
+import org.zith.expr.ctxwl.core.accesscontrol.Realm;
+import org.zith.expr.ctxwl.webapi.authentication.RealmFactory;
 
 import java.io.File;
 import java.util.function.Supplier;

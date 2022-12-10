@@ -4,7 +4,7 @@ import com.google.common.base.Splitter;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
-import org.zith.expr.ctxwl.webapi.accesscontrol.Realm;
+import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 
 import java.io.IOException;
 import java.util.Collection;

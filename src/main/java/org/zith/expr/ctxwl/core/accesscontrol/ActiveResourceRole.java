@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.accesscontrol;
+package org.zith.expr.ctxwl.core.accesscontrol;
 
 import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;

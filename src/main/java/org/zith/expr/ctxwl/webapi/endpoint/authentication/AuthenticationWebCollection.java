@@ -7,7 +7,7 @@ import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
-import org.zith.expr.ctxwl.webapi.accesscontrol.Realm;
+import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 
 import java.util.List;
 import java.util.stream.Collectors;

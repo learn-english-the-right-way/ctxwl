@@ -2,7 +2,7 @@ package org.zith.expr.ctxwl.webapi.authentication;
 
 import jakarta.ws.rs.core.SecurityContext;
 import org.jetbrains.annotations.NotNull;
-import org.zith.expr.ctxwl.webapi.accesscontrol.Principal;
+import org.zith.expr.ctxwl.core.accesscontrol.Principal;
 
 import java.util.Objects;
 
