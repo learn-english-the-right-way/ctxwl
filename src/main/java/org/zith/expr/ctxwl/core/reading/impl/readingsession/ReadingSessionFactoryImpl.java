@@ -132,7 +132,19 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
 
     @Override
     public Optional<ReadingSession> loadSession(String group, long serial) {
-        return Optional.empty(); // TODO
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(group));
+        var optionalReadingSessionEntity = withTransaction(session -> {
+            var cb = session.getCriteriaBuilder();
+            var q = cb.createQuery(ReadingSessionEntity.class);
+            var r = q.from(ReadingSessionEntity.class);
+            q.where(cb.and(
+                    cb.equal(r.get(ReadingSessionEntity_.group), group),
+                    cb.equal(r.get(ReadingSessionEntity_.serial), serial)));
+            // TODO handle concurrency issues
+            return session.createQuery(q).uniqueResultOptional();
+        });
+
+        return optionalReadingSessionEntity.map(this::createReadingSession);
     }
 
     @NotNull
