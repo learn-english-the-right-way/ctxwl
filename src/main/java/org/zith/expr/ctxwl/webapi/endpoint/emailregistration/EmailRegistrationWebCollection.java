@@ -55,7 +55,6 @@ public class EmailRegistrationWebCollection {
                                 Optional.empty(),
                                 authenticationKey,
                                 Optional.empty(),
-                                Optional.empty(),
                                 Optional.empty()
                         ),
                         sendMail);
@@ -124,8 +123,7 @@ public class EmailRegistrationWebCollection {
                         Optional.empty(),
                         confirmationAuthenticationKey,
                         Optional.of(emailRegistration.getConfirmationCode()),
-                        authenticationKey,
-                        Optional.empty()
+                        authenticationKey
                 );
             });
         }

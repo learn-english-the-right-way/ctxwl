@@ -48,19 +48,19 @@ public class ReadingHistoryEntryWebCollection {
                 .map(ApplicationKeyRole::applicationKey);
 
         if (optionalApplicationKey.isEmpty()) {
-            throw new ForbiddenException();
+            throw new ReadingHistoryException.InvalidCredentialException();
         }
 
         var applicationKey = optionalApplicationKey.get();
 
         if (!Objects.equals(ReadingSessionWebCollection.escape(applicationKey), group)) {
-            throw new ForbiddenException();
+            throw new ReadingHistoryException.UnauthorizedAccessToSessionException();
         }
 
         var optionalReadingSession = readingService.loadSession(group, serial);
 
         if (optionalReadingSession.isEmpty()) {
-            throw new NotFoundException();
+            throw new ReadingHistoryException.SessionNotFoundException();
         }
 
         var readingSession = optionalReadingSession.get();

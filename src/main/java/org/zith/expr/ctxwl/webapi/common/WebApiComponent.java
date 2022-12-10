@@ -1,9 +1,12 @@
 package org.zith.expr.ctxwl.webapi.common;
 
-public enum WebApiComponent {
+import org.zith.expr.ctxwl.webapi.error.ErrorScope;
+
+public enum WebApiComponent implements ErrorScope {
     API("api"),
     SESSION_AUTHENTICATION("session_authentication"),
-    EMAIL_REGISTRATION("email_registration");
+    EMAIL_REGISTRATION("email_registration"),
+    READING_HISTORY("reading_history");
 
     private final String identifier;
 
@@ -11,6 +14,7 @@ public enum WebApiComponent {
         this.identifier = identifier;
     }
 
+    @Override
     public String identifier() {
         return identifier;
     }

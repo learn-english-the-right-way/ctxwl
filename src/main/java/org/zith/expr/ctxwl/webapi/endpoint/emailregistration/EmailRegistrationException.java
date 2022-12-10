@@ -1,6 +1,6 @@
 package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
-import org.zith.expr.ctxwl.webapi.base.WebApiDataException;
+import org.zith.expr.ctxwl.webapi.common.WebApiDataException;
 
 public class EmailRegistrationException extends WebApiDataException {
     public static class InvalidConfirmationCodeException extends EmailRegistrationException {

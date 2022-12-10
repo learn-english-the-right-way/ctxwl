@@ -1,5 +1,7 @@
 package org.zith.expr.ctxwl.webapi.common;
 
+import org.zith.expr.ctxwl.webapi.error.ErrorCode;
+
 public enum WebApiErrorCode implements ErrorCode {
     UNAUTHENTICATED("unauthenticated"),
     DATA_ERROR("data_error");

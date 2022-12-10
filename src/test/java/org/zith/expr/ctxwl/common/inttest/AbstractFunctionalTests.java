@@ -13,7 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-@Tag("integration")
+@Tag("functional")
 public abstract class AbstractFunctionalTests<C> {
 
     private static final String CONFIGURATION_PATH_PROPERTY = "org.zith.expr.ctxwl.common.functest.configuration.path";

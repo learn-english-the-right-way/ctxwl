@@ -1,6 +1,6 @@
 package org.zith.expr.ctxwl.webapi.endpoint.authentication;
 
-import org.zith.expr.ctxwl.webapi.base.WebApiDataException;
+import org.zith.expr.ctxwl.webapi.common.WebApiDataException;
 
 public class AuthenticationException extends WebApiDataException {
     public static class InvalidCredentialException extends AuthenticationException {

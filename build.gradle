@@ -23,6 +23,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.13.0'
 
     implementation 'com.google.guava:guava:31.0.1-jre'
+    implementation 'com.google.inject:guice:5.1.0'
 
     implementation 'commons-cli:commons-cli:1.4'
 
@@ -65,26 +66,26 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 
-tasks.register('integrationTest', Test) {
-    description = 'Runs integration tests.'
+tasks.register('functionalTest', Test) {
+    description = 'Runs functional tests.'
     group = 'verification'
 }
 
 test {
     useJUnitPlatform {
-        excludeTags 'integration'
+        excludeTags 'functional'
     }
 }
 
-integrationTest {
+functionalTest {
     useJUnitPlatform {
-        includeTags 'integration'
+        includeTags 'functional'
     }
     shouldRunAfter test
 }
 
 check {
-    dependsOn integrationTest
+    dependsOn functionalTest
 }
 
 application {

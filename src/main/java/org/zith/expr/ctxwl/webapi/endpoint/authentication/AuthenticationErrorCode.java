@@ -1,6 +1,6 @@
 package org.zith.expr.ctxwl.webapi.endpoint.authentication;
 
-import org.zith.expr.ctxwl.webapi.common.ErrorCode;
+import org.zith.expr.ctxwl.webapi.error.ErrorCode;
 import org.zith.expr.ctxwl.webapi.common.WebApiComponent;
 
 public enum AuthenticationErrorCode implements ErrorCode {

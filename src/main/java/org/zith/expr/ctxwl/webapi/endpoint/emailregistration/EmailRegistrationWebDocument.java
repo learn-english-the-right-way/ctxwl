@@ -1,7 +1,6 @@
 package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.zith.expr.ctxwl.webapi.session.SessionToken;
 
 import java.util.Optional;
 
@@ -11,7 +10,7 @@ public record EmailRegistrationWebDocument(
         Optional<String> password,
         Optional<String> applicationKey,
         Optional<String> confirmationCode,
-        Optional<String> userAuthenticationApplicationKey,
-        Optional<SessionToken> userSessionToken) {
+        Optional<String> userAuthenticationApplicationKey
+) {
 
 }
