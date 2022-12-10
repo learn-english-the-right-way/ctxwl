@@ -1,20 +1,20 @@
-package org.zith.expr.ctxwl.core.reading.inttest;
+package org.zith.expr.ctxwl.core.reading.functest;
 
 import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
-import org.zith.expr.ctxwl.common.inttest.AbstractIntegrationTests;
+import org.zith.expr.ctxwl.common.inttest.AbstractFunctionalTests;
 import org.zith.expr.ctxwl.core.reading.InterceptedReadingServiceCreator;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
-import org.zith.expr.ctxwl.core.reading.inttest.config.ReadingServiceTestConfiguration;
-import org.zith.expr.ctxwl.core.reading.inttest.config.ReadingServiceTestConfigurator;
+import org.zith.expr.ctxwl.core.reading.functest.config.ReadingServiceTestConfiguration;
+import org.zith.expr.ctxwl.core.reading.functest.config.ReadingServiceTestConfigurator;
 
 import java.io.File;
 import java.util.function.Supplier;
 
-public abstract class AbstractReadingServiceIntegrationTests extends AbstractIntegrationTests<ReadingServiceTestConfiguration> {
+public abstract class AbstractReadingServiceFunctionalTests extends AbstractFunctionalTests<ReadingServiceTestConfiguration> {
     private final Supplier<ReadingService> readingServiceSupplier;
 
-    public AbstractReadingServiceIntegrationTests() {
+    public AbstractReadingServiceFunctionalTests() {
         readingServiceSupplier = Suppliers.memoize(() -> InterceptedReadingServiceCreator.create(
                 configuration().postgreSql().effectiveConfiguration(),
                 configuration().mongoDb().effectiveConfiguration()

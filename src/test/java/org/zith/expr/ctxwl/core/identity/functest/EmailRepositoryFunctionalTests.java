@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.core.identity.inttest;
+package org.zith.expr.ctxwl.core.identity.functest;
 
 import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryTuner;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EmailRepositoryIntegrationTests extends AbstractIdentityServiceIntegrationTests {
+public class EmailRepositoryFunctionalTests extends AbstractIdentityServiceFunctionalTests {
     @Test
     public void testEnsuringEmailConcurrently() throws Exception {
         var phaser = new Phaser();

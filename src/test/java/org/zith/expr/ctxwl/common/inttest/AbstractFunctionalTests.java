@@ -14,13 +14,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @Tag("integration")
-public abstract class AbstractIntegrationTests<C> {
+public abstract class AbstractFunctionalTests<C> {
 
     private static final String CONFIGURATION_PATH_PROPERTY = "org.zith.expr.ctxwl.common.functest.configuration.path";
     private static final String CONFIGURATION_PATH_ENV = "CTXWL_FUNCTEST_CONFIG";
     private final Supplier<C> configuration;
 
-    protected AbstractIntegrationTests() {
+    protected AbstractFunctionalTests() {
         configuration = Suppliers.memoize(this::readConfiguration);
     }
 
@@ -69,7 +69,7 @@ public abstract class AbstractIntegrationTests<C> {
 
         if (configurationFiles.length <= 0) {
             throw new IllegalArgumentException(
-                    "None of configura0iton files has been found - candidates: " +
+                    "None of configuration files has been found - candidates: " +
                             String.join(", ", configurationNames));
         }
 
@@ -88,7 +88,7 @@ public abstract class AbstractIntegrationTests<C> {
                         Optional::isPresent,
                         v -> v.flatMap(c -> Optional.ofNullable(c.getSuperclass())))
                 .flatMap(Optional::stream)
-                .takeWhile(c -> c != AbstractIntegrationTests.class)
+                .takeWhile(c -> c != AbstractFunctionalTests.class)
                 .map(Class::getSimpleName)
                 .map(n -> trimmingPattens.stream()
                         .map(v -> v.matcher(n))

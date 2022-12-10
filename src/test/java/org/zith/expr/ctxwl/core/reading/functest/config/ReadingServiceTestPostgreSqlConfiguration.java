@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.core.identity.inttest.config;
+package org.zith.expr.ctxwl.core.reading.functest.config;
 
 import org.zith.expr.ctxwl.app.config.Configurations;
 import org.zith.expr.ctxwl.common.configuration.Configuration;
@@ -6,15 +6,15 @@ import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 
 import java.util.Optional;
 
-public record IdentityServiceTestPostgreSqlConfiguration(
+public record ReadingServiceTestPostgreSqlConfiguration(
         String uri,
         String username,
         String password
-) implements Configuration<IdentityServiceTestPostgreSqlConfiguration> {
+) implements Configuration<ReadingServiceTestPostgreSqlConfiguration> {
 
     @Override
-    public IdentityServiceTestPostgreSqlConfiguration merge(IdentityServiceTestPostgreSqlConfiguration overriding) {
-        return new IdentityServiceTestPostgreSqlConfiguration(
+    public ReadingServiceTestPostgreSqlConfiguration merge(ReadingServiceTestPostgreSqlConfiguration overriding) {
+        return new ReadingServiceTestPostgreSqlConfiguration(
                 Configurations.overlay(uri(), overriding.uri()),
                 Configurations.overlay(username(), overriding.username()),
                 Configurations.overlay(password(), overriding.password())
@@ -29,7 +29,7 @@ public record IdentityServiceTestPostgreSqlConfiguration(
         );
     }
 
-    public static IdentityServiceTestPostgreSqlConfiguration empty() {
-        return new IdentityServiceTestPostgreSqlConfiguration(null, null, null);
+    public static ReadingServiceTestPostgreSqlConfiguration empty() {
+        return new ReadingServiceTestPostgreSqlConfiguration(null, null, null);
     }
 }

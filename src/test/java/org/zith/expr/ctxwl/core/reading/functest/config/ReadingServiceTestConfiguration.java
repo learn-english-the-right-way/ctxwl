@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.core.reading.inttest.config;
+package org.zith.expr.ctxwl.core.reading.functest.config;
 
 import org.zith.expr.ctxwl.app.config.Configurations;
 import org.zith.expr.ctxwl.common.configuration.Configuration;

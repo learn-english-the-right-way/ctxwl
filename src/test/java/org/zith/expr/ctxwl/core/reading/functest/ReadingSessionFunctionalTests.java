@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.core.reading.inttest;
+package org.zith.expr.ctxwl.core.reading.functest;
 
 import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.reading.impl.ReadingServiceTuner;
@@ -9,7 +9,7 @@ import java.util.concurrent.Phaser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReadingSessionIntegrationTests extends AbstractReadingServiceIntegrationTests {
+public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctionalTests {
     @Test
     public void testSessionLifecycle() {
         var session = readingService().makeSession("testSessionLifecycle");

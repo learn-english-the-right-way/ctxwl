@@ -5,8 +5,12 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.webapi.accesscontrol.Realm;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/authentication")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -35,7 +39,7 @@ public class AuthenticationWebCollection {
     ) throws Exception {
         try (var session = identityService.openSession()) {
             return session.withTransaction(() -> {
-                ControlledResource controlledResource;
+                List<ControlledResource> controlledResources;
                 CredentialManager.KeyUsage loginKeyUsage;
                 if (authenticationMethod.startsWith(AUTHENTICATION_METHOD_PREFIX_USER_EMAIL)) {
                     var key = authenticationMethod.substring(AUTHENTICATION_METHOD_PREFIX_USER_EMAIL.length());
@@ -49,24 +53,33 @@ public class AuthenticationWebCollection {
                         throw new AuthenticationException.InvalidCredentialException();
                     }
                     var user = optionalUser.get();
-                    controlledResource = user.getControlledResource();
+                    controlledResources = List.of(user.getControlledResource());
                     loginKeyUsage = CredentialManager.KeyUsage.USER_LOGIN;
                 } else if (authenticationMethod.startsWith(AUTHENTICATION_METHOD_PREFIX_REGISTRATION_EMAIL)) {
                     var key = authenticationMethod.substring(AUTHENTICATION_METHOD_PREFIX_REGISTRATION_EMAIL.length());
-                    var optionalEmailRegistration = session.emailRegistrationRepository().get(key);
-                    if (optionalEmailRegistration.isEmpty()) {
+                    var emailRegistrations = session.emailRegistrationRepository().list(key);
+                    if (emailRegistrations.isEmpty()) {
                         throw new AuthenticationException.InvalidCredentialException();
                     }
-                    var emailRegistration = optionalEmailRegistration.get();
-                    controlledResource = emailRegistration.getControlledResource();
+                    controlledResources =
+                            emailRegistrations.stream()
+                                    .map(EmailRegistration::getControlledResource)
+                                    .collect(Collectors.toList());
                     loginKeyUsage = CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL;
                 } else {
                     throw new AuthenticationException.UnsupportedAuthenticationMethodException(authenticationMethod.replaceAll(":.*$", ""));
                 }
 
-                if (!controlledResource.validatePassword(loginKeyUsage, document.password())) {
+                var authenticatedControlledResource =
+                        controlledResources.stream()
+                                .filter(r -> r.validatePassword(loginKeyUsage, document.password()))
+                                .findFirst();
+
+                if (authenticatedControlledResource.isEmpty()) {
                     throw new AuthenticationException.InvalidCredentialException();
                 }
+
+                var controlledResource = authenticatedControlledResource.get();
 
                 var optionalAuthenticatingKeyUsage =
                         realm.resolveAuthenticatingKeyUsage(controlledResource.getType());

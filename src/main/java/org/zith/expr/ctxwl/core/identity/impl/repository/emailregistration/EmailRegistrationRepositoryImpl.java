@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration;
 
 import com.google.common.base.Preconditions;
 import org.hibernate.Session;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.EmailRegistrationRepository;
@@ -11,8 +12,9 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryImpl;
 
 import java.time.Clock;
-import java.util.Optional;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class EmailRegistrationRepositoryImpl implements EmailRegistrationRepository {
     private final Session session;
@@ -44,21 +46,33 @@ public class EmailRegistrationRepositoryImpl implements EmailRegistrationReposit
         Preconditions.checkArgument(credentialRepository.validateStructureOfPassword(password));
 
         var email = emailRepository.ensure(address);
-        return EmailRegistrationImpl.create(this, email, password, makeConfirmationCode(), clock.instant());
+
+        var existingRegistration = list(address).stream()
+                .filter(emailRegistration ->
+                        emailRegistration.getControlledResource()
+                                .validatePassword(
+                                        CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL,
+                                        password))
+                .findFirst();
+
+        return existingRegistration.orElseGet(() ->
+                EmailRegistrationImpl.create(this, email, password, makeConfirmationCode(), clock.instant()));
     }
 
     @Override
-    public Optional<EmailRegistration> get(String address) {
+    public List<EmailRegistration> list(String address) {
         return emailRepository.get(address, EmailImpl.class)
+                .stream()
                 .flatMap(email -> {
                     var cb = session.getCriteriaBuilder();
                     var q = cb.createQuery(EmailRegistrationEntity.class);
                     var r = q.from(EmailRegistrationEntity.class);
                     q.where(cb.equal(r.get(EmailRegistrationEntity_.EMAIL), email.getEntity()));
-                    return session.createQuery(q).setMaxResults(1).uniqueResultOptional()
+                    return session.createQuery(q).stream()
                             .map(EmailRegistrationEntity::getDelegate)
                             .map(e -> e.bind(this));
-                });
+                })
+                .collect(Collectors.toList());
     }
 
     private String makeConfirmationCode() {

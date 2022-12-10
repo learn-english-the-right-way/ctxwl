@@ -76,25 +76,26 @@ public class EmailRegistrationWebCollection {
     ) {
         try (var session = identityServiceSessionFactory.openSession()) {
             return session.withTransaction(() -> {
-                var optionalEmailRegistration = session.emailRegistrationRepository().get(address);
+                var emailRegistrations = session.emailRegistrationRepository().list(address);
 
-                if (optionalEmailRegistration.isEmpty()) {
+                if (emailRegistrations.isEmpty()) {
                     throw new EmailRegistrationException.UnauthorizedEmailAddressException();
                 }
 
-                var emailRegistration = optionalEmailRegistration.get();
-                var registrationResource = emailRegistration.getControlledResource();
-                var authorized =
-                        CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()
-                                .map(Principal::roles)
-                                .flatMap(Collection::stream)
-                                .anyMatch(ActiveResourceRole.match(
-                                        CredentialManager.ResourceType.EMAIL_REGISTRATION,
-                                        registrationResource.getIdentifier()));
+                var authorizedEmailRegistrations =
+                        emailRegistrations.stream().filter(emailRegistration ->
+                                CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()
+                                        .map(Principal::roles)
+                                        .flatMap(Collection::stream)
+                                        .anyMatch(ActiveResourceRole.match(
+                                                CredentialManager.ResourceType.EMAIL_REGISTRATION,
+                                                emailRegistration.getControlledResource().getIdentifier()))).findAny();
 
-                if (!authorized) {
+                if (authorizedEmailRegistrations.isEmpty()) {
                     throw new EmailRegistrationException.UnauthorizedEmailAddressException();
                 }
+
+                var emailRegistration = authorizedEmailRegistrations.get();
 
                 if (!Objects.equals(
                         Optional.of(emailRegistration.getConfirmationCode()),
@@ -107,7 +108,7 @@ public class EmailRegistrationWebCollection {
                     var newUser = session.userRepository().register();
                     emailRegistration.getEmail().link(newUser);
                     newUser.getControlledResource().importKey(
-                            registrationResource,
+                            emailRegistration.getControlledResource(),
                             CredentialManager.KeyUsage.REGISTRATION_CREDENTIAL_PROPOSAL,
                             CredentialManager.KeyUsage.USER_LOGIN,
                             false);

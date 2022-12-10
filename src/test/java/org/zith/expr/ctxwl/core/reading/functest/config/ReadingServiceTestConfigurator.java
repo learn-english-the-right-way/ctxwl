@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.core.reading.inttest.config;
+package org.zith.expr.ctxwl.core.reading.functest.config;
 
 import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.common.configuration.AbstractConfigurator;
