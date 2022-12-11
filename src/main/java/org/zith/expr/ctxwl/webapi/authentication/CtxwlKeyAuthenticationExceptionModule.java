@@ -1,52 +1,88 @@
 package org.zith.expr.ctxwl.webapi.authentication;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.ProvidesIntoSet;
-import com.google.inject.name.Named;
+import com.google.common.base.Suppliers;
+import com.google.inject.*;
+import com.google.inject.multibindings.Multibinder;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import org.zith.expr.ctxwl.webapi.common.WebApiErrorCode;
 import org.zith.expr.ctxwl.webapi.common.WebApiExceptionExplainerMaker;
-import org.zith.expr.ctxwl.webapi.common.WebApiExceptionModule;
+import org.zith.expr.ctxwl.webapi.common.WebApiExceptionExplainerRepository;
 import org.zith.expr.ctxwl.webapi.error.AbstractExceptionMapperMaker;
 import org.zith.expr.ctxwl.webapi.error.ExceptionExplainerDescriptor;
 import org.zith.expr.ctxwl.webapi.mapper.exception.ExceptionExplainer;
 import org.zith.expr.ctxwl.webapi.mapper.exception.SimpleExceptionCauseExplanation;
 import org.zith.expr.ctxwl.webapi.mapper.exception.StrictExceptionExplainer;
 
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class CtxwlKeyAuthenticationExceptionModule extends AbstractModule {
-    @ProvidesIntoSet
-    @Named(WebApiExceptionModule.WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-    protected ExceptionExplainerDescriptor ctxwlKeyAuthenticationExceptionExplainerDescriptor(
-            WebApiExceptionExplainerMaker webApiExceptionExplainerMaker
-    ) {
-        return ExceptionExplainerDescriptor.of(
-                webApiExceptionExplainerMaker.make(
-                        WebApiErrorCode.UNAUTHENTICATED,
-                        CtxwlKeyAuthenticationException.class,
-                        ((code, exception) -> SimpleExceptionCauseExplanation.create(code,
-                                "The caller cannot be authenticated. Please check X-Ctxwl-Key header."))));
+    @Override
+    protected void configure() {
+        bind(typeOfExeptionMapperOfWebApiDataException()).toProvider(ExceptionMapperProvider.class)
+                .in(Scopes.SINGLETON);
+        bind(ExplainerRepository.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), WebApiExceptionExplainerRepository.class)
+                .addBinding().to(ExplainerRepository.class);
     }
 
-    @Provides
-    @Singleton
-    protected ExceptionMapper<CtxwlKeyAuthenticationException> webApiExceptionMapper(
-            @Named(WebApiExceptionModule.WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-            Set<ExceptionExplainerDescriptor> explainerDescriptors
-    ) {
-        var maker = new AbstractExceptionMapperMaker
-                <CtxwlKeyAuthenticationException, CtxwlKeyAuthenticationExceptionExceptionMapper>() {
-            @Override
-            protected CtxwlKeyAuthenticationExceptionExceptionMapper newExceptionMapper(
-                    StrictExceptionExplainer<CtxwlKeyAuthenticationException> lastExplainer,
-                    LinkedList<ExceptionExplainer<?>> chain) {
-                return new CtxwlKeyAuthenticationExceptionExceptionMapper(lastExplainer, chain);
-            }
+    private static TypeLiteral<ExceptionMapper<CtxwlKeyAuthenticationException>> typeOfExeptionMapperOfWebApiDataException() {
+        return new TypeLiteral<>() {
         };
-        return maker.create(CtxwlKeyAuthenticationException.class, explainerDescriptors.stream().toList());
+    }
+
+    public static class ExceptionMapperProvider implements Provider<ExceptionMapper<CtxwlKeyAuthenticationException>> {
+        private final Set<WebApiExceptionExplainerRepository> explainerRepositories;
+
+        @Inject
+        public ExceptionMapperProvider(Set<WebApiExceptionExplainerRepository> explainerRepositories) {
+            this.explainerRepositories = explainerRepositories;
+        }
+
+        @Override
+        public ExceptionMapper<CtxwlKeyAuthenticationException> get() {
+            var maker = new AbstractExceptionMapperMaker
+                    <CtxwlKeyAuthenticationException, CtxwlKeyAuthenticationExceptionMapper>() {
+                @Override
+                protected CtxwlKeyAuthenticationExceptionMapper newExceptionMapper(
+                        StrictExceptionExplainer<CtxwlKeyAuthenticationException> lastExplainer,
+                        LinkedList<ExceptionExplainer<?>> chain
+                ) {
+                    return new CtxwlKeyAuthenticationExceptionMapper(lastExplainer, chain);
+                }
+            };
+            return maker.create(
+                    CtxwlKeyAuthenticationException.class,
+                    explainerRepositories.stream().flatMap(r -> r.descriptors().stream()).toList());
+        }
+    }
+
+    public static class ExplainerRepository implements WebApiExceptionExplainerRepository {
+        private final WebApiExceptionExplainerMaker webApiExceptionExplainerMaker;
+        private final Supplier<ExceptionExplainer<CtxwlKeyAuthenticationException>>
+                ctxwlKeyAuthenticationExceptionSupplier;
+
+        @Inject
+        public ExplainerRepository(WebApiExceptionExplainerMaker webApiExceptionExplainerMaker) {
+            this.webApiExceptionExplainerMaker = webApiExceptionExplainerMaker;
+            ctxwlKeyAuthenticationExceptionSupplier = Suppliers.memoize(() ->
+                    this.webApiExceptionExplainerMaker.make(
+                            WebApiErrorCode.UNAUTHENTICATED,
+                            CtxwlKeyAuthenticationException.class,
+                            ((code, exception) -> SimpleExceptionCauseExplanation.create(code,
+                                    "The caller cannot be authenticated. Please check X-Ctxwl-Key header."))));
+        }
+
+        public ExceptionExplainer<CtxwlKeyAuthenticationException> ctxwlKeyAuthenticationException() {
+            return ctxwlKeyAuthenticationExceptionSupplier.get();
+        }
+
+        @Override
+        public Collection<ExceptionExplainerDescriptor> descriptors() {
+            return List.of(ExceptionExplainerDescriptor.of(ctxwlKeyAuthenticationException()));
+        }
     }
 }

@@ -1,78 +1,97 @@
 package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
+import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.ProvidesIntoSet;
-import com.google.inject.name.Named;
+import com.google.inject.Inject;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+import org.zith.expr.ctxwl.webapi.common.WebApiExceptionExplainerRepository;
 import org.zith.expr.ctxwl.webapi.common.WebApiExceptionModule;
 import org.zith.expr.ctxwl.webapi.error.ExceptionExplainerDescriptor;
+import org.zith.expr.ctxwl.webapi.mapper.exception.ExceptionExplainer;
 import org.zith.expr.ctxwl.webapi.mapper.exception.SimpleExceptionCauseExplanation;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+
 public class EmailRegistrationExceptionModule extends AbstractModule {
-    public static final String EMAIL_REGISTRATION_EXCEPTION_EXPLAINER_DESCRIPTOR =
-            "email_registration_exception_explainer_descriptor";
 
-    @Provides
-    @Singleton
-    protected EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker() {
-        return new EmailRegistrationExceptionExplainerMaker();
+    @Override
+    protected void configure() {
+        bind(EmailRegistrationExceptionExplainerMaker.class).in(Scopes.SINGLETON);
+        bind(ExplainerRepository.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), WebApiExceptionExplainerRepository.class)
+                .addBinding().to(ExplainerRepository.class);
     }
 
-    @Provides
-    @Named(EMAIL_REGISTRATION_EXCEPTION_EXPLAINER_DESCRIPTOR)
-    @Singleton
-    protected ExceptionExplainerDescriptor emailRegistrationExceptionExplainerDescriptor(
-            EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker
-    ) {
-        return ExceptionExplainerDescriptor.of(
-                emailRegistrationExceptionExplainerMaker.make(
-                        EmailRegistrationErrorCode.INVALID_REQUEST,
-                        EmailRegistrationException.class,
-                        (code, exception) -> SimpleExceptionCauseExplanation.create(code,
-                                "You request is invalid.")));
-    }
+    public static class ExplainerRepository implements WebApiExceptionExplainerRepository {
+        private final WebApiExceptionModule.ExplainerRepository baseExplainerRepository;
+        private final EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker;
+        private final Supplier<ExceptionExplainer<EmailRegistrationException>>
+                emailRegistrationExceptionExplainerSupplier;
+        private final Supplier<ExceptionExplainer<EmailRegistrationException.UnauthorizedEmailAddressException>>
+                unauthorizedEmailAddressExceptionExplainerSupplier;
+        private final Supplier<ExceptionExplainer<EmailRegistrationException.InvalidConfirmationCodeException>>
+                invalidConfirmationCodeExceptionExplainerSupplier;
 
-    @ProvidesIntoSet
-    @Named(WebApiExceptionModule.WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-    protected ExceptionExplainerDescriptor emailRegistrationExceptionExplainerDescriptorInSet(
-            @Named(EMAIL_REGISTRATION_EXCEPTION_EXPLAINER_DESCRIPTOR)
-            ExceptionExplainerDescriptor emailRegistrationExceptionExplainerDescriptor
-    ) {
-        return emailRegistrationExceptionExplainerDescriptor;
-    }
+        @Inject
+        public ExplainerRepository(
+                WebApiExceptionModule.ExplainerRepository baseExplainerRepository,
+                EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker
+        ) {
+            this.baseExplainerRepository = baseExplainerRepository;
+            this.emailRegistrationExceptionExplainerMaker = emailRegistrationExceptionExplainerMaker;
 
-    @ProvidesIntoSet
-    @Named(WebApiExceptionModule.WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-    protected ExceptionExplainerDescriptor unauthorizedEmailAddressExceptionExplainerDescriptor(
-            EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker,
-            @Named(EMAIL_REGISTRATION_EXCEPTION_EXPLAINER_DESCRIPTOR)
-            ExceptionExplainerDescriptor emailRegistrationExceptionExplainerDescriptor
-    ) {
-        return ExceptionExplainerDescriptor.of(
-                emailRegistrationExceptionExplainerMaker.make(
-                        EmailRegistrationErrorCode.UNAUTHORIZED_EMAIL_ADDRESS,
-                        EmailRegistrationException.UnauthorizedEmailAddressException.class,
-                        (code, exception) -> SimpleExceptionCauseExplanation.create(
-                                code,
-                                "You are not authorized to confirm the given email address.")),
-                emailRegistrationExceptionExplainerDescriptor.explainer());
-    }
+            emailRegistrationExceptionExplainerSupplier = Suppliers.memoize(() ->
+                    this.emailRegistrationExceptionExplainerMaker.make(
+                            EmailRegistrationErrorCode.INVALID_REQUEST,
+                            EmailRegistrationException.class,
+                            (code, exception) -> SimpleExceptionCauseExplanation.create(code,
+                                    "You request is invalid.")));
+            unauthorizedEmailAddressExceptionExplainerSupplier = Suppliers.memoize(() ->
+                    this.emailRegistrationExceptionExplainerMaker.make(
+                            EmailRegistrationErrorCode.UNAUTHORIZED_EMAIL_ADDRESS,
+                            EmailRegistrationException.UnauthorizedEmailAddressException.class,
+                            (code, exception) -> SimpleExceptionCauseExplanation.create(
+                                    code,
+                                    "You are not authorized to confirm the given email address.")));
+            invalidConfirmationCodeExceptionExplainerSupplier = Suppliers.memoize(() ->
+                    this.emailRegistrationExceptionExplainerMaker.make(
+                            EmailRegistrationErrorCode.INVALID_CONFIRMATION_CODE,
+                            EmailRegistrationException.InvalidConfirmationCodeException.class,
+                            (code, exception) -> SimpleExceptionCauseExplanation.create(
+                                    code,
+                                    "The confirmation code you provided is invalid.")));
+        }
 
-    @ProvidesIntoSet
-    @Named(WebApiExceptionModule.WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-    protected ExceptionExplainerDescriptor invalidConfirmationCodeExceptionExplainerDescriptor(
-            EmailRegistrationExceptionExplainerMaker emailRegistrationExceptionExplainerMaker,
-            @Named(EMAIL_REGISTRATION_EXCEPTION_EXPLAINER_DESCRIPTOR)
-            ExceptionExplainerDescriptor emailRegistrationExceptionExplainerDescriptor
-    ) {
-        return ExceptionExplainerDescriptor.of(
-                emailRegistrationExceptionExplainerMaker.make(
-                        EmailRegistrationErrorCode.INVALID_CONFIRMATION_CODE,
-                        EmailRegistrationException.InvalidConfirmationCodeException.class,
-                        (code, exception) -> SimpleExceptionCauseExplanation.create(
-                                code,
-                                "The confirmation code you provided is invalid.")),
-                emailRegistrationExceptionExplainerDescriptor.explainer());
+        public ExceptionExplainer<EmailRegistrationException>
+        emailRegistrationExceptionExplainer() {
+            return emailRegistrationExceptionExplainerSupplier.get();
+        }
+
+        public ExceptionExplainer<EmailRegistrationException.UnauthorizedEmailAddressException>
+        unauthorizedEmailAddressExceptionExplainer() {
+            return unauthorizedEmailAddressExceptionExplainerSupplier.get();
+        }
+
+        public ExceptionExplainer<EmailRegistrationException.InvalidConfirmationCodeException>
+        invalidConfirmationCodeExceptionExplainer() {
+            return invalidConfirmationCodeExceptionExplainerSupplier.get();
+        }
+
+        @Override
+        public Collection<ExceptionExplainerDescriptor> descriptors() {
+            return List.of(
+                    ExceptionExplainerDescriptor.of(
+                            emailRegistrationExceptionExplainer(),
+                            baseExplainerRepository.webApiExceptionExplainer()),
+                    ExceptionExplainerDescriptor.of(
+                            unauthorizedEmailAddressExceptionExplainer(),
+                            emailRegistrationExceptionExplainer()),
+                    ExceptionExplainerDescriptor.of(
+                            invalidConfirmationCodeExceptionExplainer(),
+                            emailRegistrationExceptionExplainer()));
+        }
     }
 }

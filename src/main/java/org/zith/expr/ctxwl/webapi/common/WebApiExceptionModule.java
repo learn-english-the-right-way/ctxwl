@@ -1,10 +1,8 @@
 package org.zith.expr.ctxwl.webapi.common;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.ProvidesIntoSet;
-import com.google.inject.name.Named;
+import com.google.common.base.Suppliers;
+import com.google.inject.*;
+import com.google.inject.multibindings.Multibinder;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import org.zith.expr.ctxwl.webapi.error.AbstractExceptionMapperMaker;
 import org.zith.expr.ctxwl.webapi.error.ExceptionExplainerDescriptor;
@@ -12,57 +10,75 @@ import org.zith.expr.ctxwl.webapi.mapper.exception.ExceptionExplainer;
 import org.zith.expr.ctxwl.webapi.mapper.exception.SimpleExceptionCauseExplanation;
 import org.zith.expr.ctxwl.webapi.mapper.exception.StrictExceptionExplainer;
 
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class WebApiExceptionModule extends AbstractModule {
-    public static final String WEB_API_EXCEPTION_EXPLAINER_DESCRIPTOR = "web_api_exception_explainer_descriptor";
-    public static final String WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS = "web_api_exception_explainers_descriptors";
-
-    @Provides
-    @Singleton
-    protected WebApiExceptionExplainerMaker webApiExceptionExplainerMaker() {
-        return new WebApiExceptionExplainerMaker();
+    @Override
+    protected void configure() {
+        bind(typeOfExeptionMapperOfWebApiDataException()).toProvider(ExceptionMapperProvider.class)
+                .in(Scopes.SINGLETON);
+        bind(WebApiExceptionExplainerMaker.class).in(Scopes.SINGLETON);
+        bind(ExplainerRepository.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), WebApiExceptionExplainerRepository.class)
+                .addBinding().to(ExplainerRepository.class);
     }
 
-    @Provides
-    @Named(WEB_API_EXCEPTION_EXPLAINER_DESCRIPTOR)
-    @Singleton
-    protected ExceptionExplainerDescriptor webApiExceptionExplainerDescriptor(
-            WebApiExceptionExplainerMaker webApiExceptionExplainerMaker
-    ) {
-        return ExceptionExplainerDescriptor.of(
-                webApiExceptionExplainerMaker.make(
-                        WebApiErrorCode.DATA_ERROR,
-                        WebApiDataException.class,
-                        ((code, exception) -> SimpleExceptionCauseExplanation
-                                .create(code, "This endpoint doesn't accept your request.")))
-        );
-    }
-
-    @ProvidesIntoSet
-    @Named(WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-    protected ExceptionExplainerDescriptor webApiExceptionExplainerDescriptorInSet(
-            @Named(WEB_API_EXCEPTION_EXPLAINER_DESCRIPTOR)
-            ExceptionExplainerDescriptor webApiExceptionExplainerDescriptor) {
-        return webApiExceptionExplainerDescriptor;
-    }
-
-    @Provides
-    @Singleton
-    protected ExceptionMapper<WebApiDataException> webApiExceptionMapper(
-            @Named(WEB_API_EXCEPTION_EXPLAINER_DESCRIPTORS)
-            Set<ExceptionExplainerDescriptor> explainerDescriptors
-    ) {
-        var maker = new AbstractExceptionMapperMaker<WebApiDataException, WebApiDataExceptionMapper>() {
-            @Override
-            protected WebApiDataExceptionMapper newExceptionMapper(
-                    StrictExceptionExplainer<WebApiDataException> lastExplainer,
-                    LinkedList<ExceptionExplainer<?>> chain
-            ) {
-                return new WebApiDataExceptionMapper(lastExplainer, chain);
-            }
+    private static TypeLiteral<ExceptionMapper<WebApiDataException>> typeOfExeptionMapperOfWebApiDataException() {
+        return new TypeLiteral<>() {
         };
-        return maker.create(WebApiDataException.class, explainerDescriptors.stream().toList());
+    }
+
+    public static class ExceptionMapperProvider implements Provider<ExceptionMapper<WebApiDataException>> {
+        private final Set<WebApiExceptionExplainerRepository> explainerRepositories;
+
+        @Inject
+        public ExceptionMapperProvider(Set<WebApiExceptionExplainerRepository> explainerRepositories) {
+            this.explainerRepositories = explainerRepositories;
+        }
+
+        @Override
+        public ExceptionMapper<WebApiDataException> get() {
+            var maker = new AbstractExceptionMapperMaker<WebApiDataException, WebApiDataExceptionMapper>() {
+                @Override
+                protected WebApiDataExceptionMapper newExceptionMapper(
+                        StrictExceptionExplainer<WebApiDataException> lastExplainer,
+                        LinkedList<ExceptionExplainer<?>> chain
+                ) {
+                    return new WebApiDataExceptionMapper(lastExplainer, chain);
+                }
+            };
+            return maker.create(
+                    WebApiDataException.class,
+                    explainerRepositories.stream().flatMap(r -> r.descriptors().stream()).toList());
+        }
+    }
+
+    public static class ExplainerRepository implements WebApiExceptionExplainerRepository {
+        private final WebApiExceptionExplainerMaker webApiExceptionExplainerMaker;
+        private final Supplier<ExceptionExplainer<WebApiDataException>> webApiExceptionExplainerSupplier;
+
+        @Inject
+        public ExplainerRepository(WebApiExceptionExplainerMaker webApiExceptionExplainerMaker) {
+            this.webApiExceptionExplainerMaker = webApiExceptionExplainerMaker;
+            webApiExceptionExplainerSupplier = Suppliers.memoize(() ->
+                    this.webApiExceptionExplainerMaker.make(
+                            WebApiErrorCode.DATA_ERROR,
+                            WebApiDataException.class,
+                            ((code, exception) -> SimpleExceptionCauseExplanation
+                                    .create(code, "This endpoint doesn't accept your request."))));
+        }
+
+        public ExceptionExplainer<WebApiDataException> webApiExceptionExplainer() {
+            return webApiExceptionExplainerSupplier.get();
+        }
+
+        @Override
+        public Collection<ExceptionExplainerDescriptor> descriptors() {
+            return List.of(ExceptionExplainerDescriptor.of(webApiExceptionExplainer()));
+        }
     }
 }
