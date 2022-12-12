@@ -10,19 +10,23 @@ import java.util.Random;
 
 public final class IdentityServiceCreator {
     public static IdentityService create(
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
-        return create(new DefaultComponentFactory(), postgreSqlConfiguration, mailConfiguration);
+        return create(new DefaultComponentFactory(), reinitializeData, postgreSqlConfiguration, mailConfiguration);
     }
 
     static IdentityService create(
-            ComponentFactory componentFactory, PostgreSqlConfiguration postgreSqlConfiguration,
+            ComponentFactory componentFactory,
+            boolean reinitializeData,
+            PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
         return componentFactory.createIdentityServiceImpl(
                 Clock.systemDefaultZone(),
                 new Random(),
+                reinitializeData,
                 postgreSqlConfiguration,
                 mailConfiguration
         );

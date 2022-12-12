@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CtxwlApplication {
@@ -78,11 +79,13 @@ public class CtxwlApplication {
 
         var identityService =
                 IdentityServiceCreator.create(
+                        Objects.equals(configuration.core().identity().reinitializeData(), true),
                         configuration.core().identity().postgreSql().effectiveConfiguration(),
                         configuration.core().identity().mail().effectiveConfiguration());
 
         var readingService =
                 ReadingServiceCreator.create(
+                        Objects.equals(configuration.core().reading().reinitializeData(), true),
                         configuration.core().reading().postgreSql().effectiveConfiguration(),
                         configuration.core().reading().mongoDb().effectiveConfiguration());
 

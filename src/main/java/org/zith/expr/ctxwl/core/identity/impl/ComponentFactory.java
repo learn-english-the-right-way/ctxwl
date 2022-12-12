@@ -22,6 +22,7 @@ public interface ComponentFactory {
     default IdentityServiceSessionFactoryImpl createIdentityServiceSessionFactoryImpl(
             CredentialSchema credentialSchema,
             Clock clock,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
@@ -29,6 +30,7 @@ public interface ComponentFactory {
                 this,
                 credentialSchema,
                 clock,
+                reinitializeData,
                 postgreSqlConfiguration,
                 mailConfiguration
         );
@@ -38,6 +40,7 @@ public interface ComponentFactory {
     default IdentityServiceImpl createIdentityServiceImpl(
             Clock clock,
             Random random,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
@@ -45,6 +48,7 @@ public interface ComponentFactory {
                 this,
                 clock,
                 random,
+                reinitializeData,
                 postgreSqlConfiguration,
                 mailConfiguration
         );

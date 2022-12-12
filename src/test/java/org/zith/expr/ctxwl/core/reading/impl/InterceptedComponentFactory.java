@@ -12,7 +12,7 @@ import java.time.Clock;
 public class InterceptedComponentFactory implements ComponentFactory {
     @Override
     public @NotNull InterceptedReadingServiceImpl createReadingServiceImpl(
-            PostgreSqlConfiguration postgreSqlConfiguration,
+            boolean reinitializeData, PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration,
             @NotNull Clock clock
     ) {

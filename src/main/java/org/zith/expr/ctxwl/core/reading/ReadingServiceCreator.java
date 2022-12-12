@@ -10,15 +10,17 @@ import org.zith.expr.ctxwl.core.reading.impl.ReadingServiceImpl;
 
 public final class ReadingServiceCreator {
     public static ReadingService create(
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration
     ) {
-        return create(new DefaultComponentFactory(), postgreSqlConfiguration, mongoConfiguration);
+        return create(new DefaultComponentFactory(), reinitializeData, postgreSqlConfiguration, mongoConfiguration);
     }
 
     @NotNull
     static ReadingServiceImpl create(
             ComponentFactory componentFactory,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration
     ) {
@@ -26,9 +28,9 @@ public final class ReadingServiceCreator {
         Preconditions.checkNotNull(postgreSqlConfiguration);
         Preconditions.checkNotNull(mongoConfiguration);
         return componentFactory.createReadingServiceImpl(
+                reinitializeData,
                 postgreSqlConfiguration,
                 mongoConfiguration,
-                componentFactory.createClock()
-        );
+                componentFactory.createClock());
     }
 }

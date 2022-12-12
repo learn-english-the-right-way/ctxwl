@@ -15,7 +15,6 @@ import org.zith.expr.ctxwl.common.mongodb.MongoDbConfiguration;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
-import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepositoryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionEntity;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionFactory;
 
@@ -64,16 +63,25 @@ public class ReadingServiceImpl implements ReadingService {
 
     public static ReadingServiceImpl create(
             ComponentFactory componentFactory,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration,
             Clock clock
     ) {
-        return create(ReadingServiceImpl::new, componentFactory, postgreSqlConfiguration, mongoConfiguration, clock);
+        return create(
+                ReadingServiceImpl::new,
+                componentFactory,
+                reinitializeData,
+                postgreSqlConfiguration,
+                mongoConfiguration,
+                clock
+        );
     }
 
     protected static <T extends ReadingServiceImpl> T create(
             ImplementationFactory<T> implementationFactory,
             ComponentFactory componentFactory,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration,
             Clock clock
@@ -82,12 +90,13 @@ public class ReadingServiceImpl implements ReadingService {
                 postgreSqlConfiguration.makeDataSource(
                         PostgreSqlConfiguration.TransactionIsolation.TRANSACTION_READ_COMMITTED
                 );
-        var serviceRegistry =
-                new StandardServiceRegistryBuilder()
-                        .applySetting(AvailableSettings.DATASOURCE, dataSource)
-                        .applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP) // TODO
-                        .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true)
-                        .build();
+        var serviceRegistryBuilder = new StandardServiceRegistryBuilder()
+                .applySetting(AvailableSettings.DATASOURCE, dataSource)
+                .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true);
+        if (reinitializeData) {
+            serviceRegistryBuilder.applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP);
+        }
+        var serviceRegistry = serviceRegistryBuilder.build();
         var metadata = new MetadataSources(serviceRegistry)
                 .addAnnotatedClass(ReadingSessionEntity.class)
                 .getMetadataBuilder()

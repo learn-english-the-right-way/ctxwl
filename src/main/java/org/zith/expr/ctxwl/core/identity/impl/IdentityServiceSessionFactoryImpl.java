@@ -68,6 +68,7 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
             ComponentFactory componentFactory,
             CredentialSchema credentialSchema,
             Clock clock,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
@@ -75,12 +76,13 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
                 postgreSqlConfiguration.makeDataSource(
                         PostgreSqlConfiguration.TransactionIsolation.TRANSACTION_SERIALIZABLE
                 );
-        var serviceRegistry =
-                new StandardServiceRegistryBuilder()
-                        .applySetting(AvailableSettings.DATASOURCE, dataSource)
-                        .applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP) // TODO
-                        .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true)
-                        .build();
+        var serviceRegistryBuilder = new StandardServiceRegistryBuilder()
+                .applySetting(AvailableSettings.DATASOURCE, dataSource)
+                .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true);
+        if (reinitializeData) {
+            serviceRegistryBuilder.applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP);
+        }
+        var serviceRegistry = serviceRegistryBuilder.build();
         var metadata = new MetadataSources(serviceRegistry)
                 .addAnnotatedClass(UserEntity.class)
                 .addAnnotatedClass(EmailEntity.class)

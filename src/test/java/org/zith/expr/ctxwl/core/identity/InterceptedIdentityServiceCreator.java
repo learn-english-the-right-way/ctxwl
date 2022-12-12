@@ -13,6 +13,7 @@ public class InterceptedIdentityServiceCreator {
     ) {
         return IdentityServiceCreator.create(
                 new InterceptedComponentFactory(),
+                true,
                 postgreSqlConfiguration,
                 mailConfiguration);
     }

@@ -46,6 +46,7 @@ public class IdentityServiceImpl implements IdentityService {
     public static IdentityServiceImpl create(
             ComponentFactory componentFactory, Clock clock,
             Random random,
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
@@ -54,6 +55,7 @@ public class IdentityServiceImpl implements IdentityService {
                 componentFactory.createIdentityServiceSessionFactoryImpl(
                         credentialSchema,
                         clock,
+                        reinitializeData,
                         postgreSqlConfiguration,
                         mailConfiguration
                 );

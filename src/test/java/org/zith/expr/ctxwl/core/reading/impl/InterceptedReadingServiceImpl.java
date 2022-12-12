@@ -41,7 +41,7 @@ public class InterceptedReadingServiceImpl extends ReadingServiceImpl {
         return create(
                 InterceptedReadingServiceImpl::new,
                 componentFactory,
-                postgreSqlConfiguration,
+                true, postgreSqlConfiguration,
                 mongoConfiguration,
                 clock
         );

@@ -36,11 +36,12 @@ public interface ComponentFactory {
 
     @NotNull
     default ReadingServiceImpl createReadingServiceImpl(
+            boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MongoDbConfiguration mongoConfiguration,
             Clock clock
     ) {
-        return ReadingServiceImpl.create(this, postgreSqlConfiguration, mongoConfiguration, clock);
+        return ReadingServiceImpl.create(this, reinitializeData, postgreSqlConfiguration, mongoConfiguration, clock);
     }
 
     @NotNull
