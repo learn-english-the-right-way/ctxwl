@@ -12,4 +12,16 @@ public class ReadingHistoryException extends WebApiDataException {
     public static class InvalidCredentialException extends UnauthorizedAccessToSessionException {
     }
 
+    public static class FieldNotAcceptedException extends ReadingHistoryException {
+
+        private final String fieldName;
+
+        public FieldNotAcceptedException(String fieldName) {
+            this.fieldName = fieldName;
+        }
+
+        public String getFieldName() {
+            return fieldName;
+        }
+    }
 }

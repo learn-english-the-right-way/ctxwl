@@ -35,6 +35,8 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
                 sessionNotFoundExceptionSupplier;
         private final Supplier<ExceptionExplainer<ReadingHistoryException.InvalidCredentialException>>
                 invalidCredentialExceptionSupplier;
+        private final Supplier<ExceptionExplainer<ReadingHistoryException.FieldNotAcceptedException>>
+                fieldNotModifiableExceptionSupplier;
 
         @Inject
         public ExplainerRepository(
@@ -76,6 +78,14 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
                                     code,
                                     "You didn't provide a valid credential, which is required to access a " +
                                             "reading session.")));
+            fieldNotModifiableExceptionSupplier = Suppliers.memoize(() ->
+                    this.readingHistoryExceptionExplainerMaker.make(
+                            ReadingHistoryErrorCode.FIELD_NOT_ACCEPTED,
+                            ReadingHistoryException.FieldNotAcceptedException.class,
+                            (code, exception) -> SimpleExceptionCauseExplanation.create(
+                                    code,
+                                    "You were trying to change field '%s', which is not modifiable."
+                                            .formatted(exception.getFieldName()))));
         }
 
         public ExceptionExplainer<ReadingHistoryException> readingHistoryException() {
@@ -92,6 +102,10 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
 
         public ExceptionExplainer<ReadingHistoryException.InvalidCredentialException> invalidCredentialException() {
             return invalidCredentialExceptionSupplier.get();
+        }
+
+        public ExceptionExplainer<ReadingHistoryException.FieldNotAcceptedException> fieldNotModifiableException() {
+            return fieldNotModifiableExceptionSupplier.get();
         }
 
         @Override
@@ -111,6 +125,10 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
                     ),
                     ExceptionExplainerDescriptor.of(
                             invalidCredentialException(),
+                            readingHistoryException()
+                    ),
+                    ExceptionExplainerDescriptor.of(
+                            fieldNotModifiableException(),
                             readingHistoryException()
                     )
             );

@@ -32,12 +32,17 @@ public class ReadingHistoryEntryWebCollection {
         this.securityContext = securityContext;
     }
 
-    @Path("{group}-{serial}")
+    @Path("{sessionGroup}-{sessionSerial}-{serial}")
     @PUT
     public ReadingHistoryEntryWebDocument create(
-            @PathParam("group") String group,
+            @PathParam("sessionGroup") String sessionGroup,
+            @PathParam("sessionSerial") Long sessionSerial,
             @PathParam("serial") Long serial,
             ReadingHistoryEntryWebDocument document) throws Exception {
+        if (!(serial != null && serial < 0 && Objects.equals(serial, document.serial()))) {
+            throw new ReadingHistoryException.FieldNotAcceptedException("serial");
+        }
+
         var optionalApplicationKey = CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()
                 .map(Principal::roles)
                 .flatMap(List::stream)
@@ -53,11 +58,11 @@ public class ReadingHistoryEntryWebCollection {
 
         var applicationKey = optionalApplicationKey.get();
 
-        if (!Objects.equals(ReadingSessionWebCollection.escape(applicationKey), group)) {
+        if (!Objects.equals(ReadingSessionWebCollection.escape(applicationKey), sessionGroup)) {
             throw new ReadingHistoryException.UnauthorizedAccessToSessionException();
         }
 
-        var optionalReadingSession = readingService.loadSession(group, serial);
+        var optionalReadingSession = readingService.loadSession(sessionGroup, sessionSerial);
 
         if (optionalReadingSession.isEmpty()) {
             throw new ReadingHistoryException.SessionNotFoundException();
@@ -66,7 +71,7 @@ public class ReadingHistoryEntryWebCollection {
         var readingSession = optionalReadingSession.get();
 
         var result = readingSession.create(
-                document.serial(),
+                serial,
                 new ReadingHistoryEntryValue(
                         document.uri(),
                         document.text(),
@@ -74,6 +79,7 @@ public class ReadingHistoryEntryWebCollection {
                         document.updateTime(),
                         document.majorSerial()
                 ));
+
         return new ReadingHistoryEntryWebDocument(
                 result.serial(),
                 result.uri(),
