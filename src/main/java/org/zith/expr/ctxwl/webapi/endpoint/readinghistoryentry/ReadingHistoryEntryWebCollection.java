@@ -4,12 +4,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
-import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
-import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.accesscontrol.ActiveResourceRole;
 import org.zith.expr.ctxwl.core.accesscontrol.ApplicationKeyRole;
 import org.zith.expr.ctxwl.core.accesscontrol.Principal;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
+import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionWebCollection;
@@ -39,6 +39,9 @@ public class ReadingHistoryEntryWebCollection {
             @PathParam("sessionSerial") Long sessionSerial,
             @PathParam("serial") Long serial,
             ReadingHistoryEntryWebDocument document) throws Exception {
+        if (!Objects.equals(document.session(), "%s-%d".formatted(sessionGroup, sessionSerial))) {
+            throw new ReadingHistoryException.FieldNotAcceptedException("session");
+        }
         if (!(serial != null && serial < 0 && Objects.equals(serial, document.serial()))) {
             throw new ReadingHistoryException.FieldNotAcceptedException("serial");
         }
@@ -81,6 +84,7 @@ public class ReadingHistoryEntryWebCollection {
                 ));
 
         return new ReadingHistoryEntryWebDocument(
+                "%s-%d".formatted(result.session().getGroup(), result.session().getSerial()),
                 result.serial(),
                 result.uri(),
                 result.text(),

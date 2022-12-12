@@ -51,6 +51,7 @@ public class ReadingSessionWebCollection {
 
         var applicationKey = optionalApplicationKey.get();
 
+        // TODO avoid exposing credentials in URLs
         var readingSession = readingService.makeSession(escape(applicationKey));
         return makeWebDocument(readingSession);
     }
@@ -58,7 +59,7 @@ public class ReadingSessionWebCollection {
     @NotNull
     private ReadingSessionWebDocument makeWebDocument(ReadingSession readingSession) {
         return new ReadingSessionWebDocument(
-                readingSession.getGroup() + "-" + readingSession.getSerial(),
+                "%s-%d".formatted(readingSession.getGroup(), readingSession.getSerial()),
                 // TODO deal with fractions
                 readingSession.getUpdateTime().map(Instant::getEpochSecond).orElse(null),
                 readingSession.getCompletionTime().map(Instant::getEpochSecond).orElse(null),

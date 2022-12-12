@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public record ReadingHistoryEntryWebDocument(
+        String session,
         Long serial,
         String uri,
         Optional<String> text,
