@@ -42,8 +42,11 @@ public class ReadingHistoryEntryWebCollection {
         if (!Objects.equals(document.session(), "%s-%d".formatted(sessionGroup, sessionSerial))) {
             throw new ReadingHistoryException.FieldNotAcceptedException("session");
         }
-        if (!(serial != null && serial < 0 && Objects.equals(serial, document.serial()))) {
+        if (!(serial != null && serial >= 0 && Objects.equals(serial, document.serial()))) {
             throw new ReadingHistoryException.FieldNotAcceptedException("serial");
+        }
+        if (document.creationTime().isEmpty()) {
+            throw new ReadingHistoryException.FieldNotAcceptedException("creationTime");
         }
 
         var optionalApplicationKey = CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()

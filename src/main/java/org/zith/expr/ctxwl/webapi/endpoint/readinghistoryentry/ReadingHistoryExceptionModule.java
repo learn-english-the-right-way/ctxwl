@@ -84,7 +84,7 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
                             ReadingHistoryException.FieldNotAcceptedException.class,
                             (code, exception) -> SimpleExceptionCauseExplanation.create(
                                     code,
-                                    "You were trying to change field '%s', which is not modifiable."
+                                    "You were trying to update field '%s' to an unacceptable value."
                                             .formatted(exception.getFieldName()))));
         }
 
