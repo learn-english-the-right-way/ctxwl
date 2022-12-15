@@ -1,5 +1,7 @@
 package org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry;
 
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.types.ObjectId;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionKeyDocument;
 
 import java.time.Instant;
@@ -11,7 +13,9 @@ public record ReadingHistoryEntryDocument(
         String text,
         Instant creationTime,
         Instant updateTime,
-        Long majorSerial
+        Long majorSerial,
+        @BsonId
+        ObjectId id
 ) {
     public static final class Fields {
         public static final String session_group = "session.group";

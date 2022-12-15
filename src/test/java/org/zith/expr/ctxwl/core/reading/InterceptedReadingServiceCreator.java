@@ -10,7 +10,8 @@ public final class InterceptedReadingServiceCreator {
             MongoDbConfiguration mongoConfiguration
     ) {
         return ReadingServiceCreator.create(
-                new InterceptedComponentFactory(), true,
+                new InterceptedComponentFactory(),
+                true,
                 postgreSqlConfiguration,
                 mongoConfiguration
         );

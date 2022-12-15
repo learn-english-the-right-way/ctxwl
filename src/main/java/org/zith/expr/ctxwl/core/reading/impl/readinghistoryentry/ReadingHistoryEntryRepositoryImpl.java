@@ -6,8 +6,6 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.core.reading.impl.ComponentFactory;
@@ -34,10 +32,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
 
     public static ReadingHistoryEntryRepositoryImpl create(ComponentFactory componentFactory, MongoDatabase mongoDatabase) {
         var collectionOfReadHistoryEntries =
-                mongoDatabase.getCollection("read_history_entries", ReadingHistoryEntryDocument.class)
-                        .withCodecRegistry(CodecRegistries.fromProviders(
-                                PojoCodecProvider.builder().register(ReadingHistoryEntryDocument.class).build(),
-                                mongoDatabase.getCodecRegistry()));
+                mongoDatabase.getCollection("readHistoryEntries", ReadingHistoryEntryDocument.class);
         collectionOfReadHistoryEntries.createIndexes(
                 List.of(new IndexModel(Indexes.ascending(
                         ReadingHistoryEntryDocument.Fields.session_group,
@@ -53,6 +48,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
             long serial,
             ReadingHistoryEntryValue value
     ) {
+        Preconditions.checkArgument(serial >= 0);
         Preconditions.checkArgument(value.creationTime().isPresent()); // TODO check if the time is recent
         Preconditions.checkArgument(value.updateTime().isEmpty());
         Preconditions.checkArgument(value.majorSerial().isEmpty());
@@ -63,6 +59,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
                 value.text().orElse(null),
                 value.creationTime().get(),
                 null,
+                null,
                 null
         );
         collectionOfReadHistoryEntries.insertOne(document); // TODO handle conflicts
@@ -72,6 +69,11 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
     @Override
     public <Session extends ReadingSession> BoundReadingHistoryEntry<Session> get(Session session, long serial) {
         return null; // TODO
+    }
+
+    @Override
+    public void drop() {
+        collectionOfReadHistoryEntries.drop();
     }
 
     public ReadingHistoryEntryDocument fetch(String sessionGroup, long sessionSerial, long serial) {

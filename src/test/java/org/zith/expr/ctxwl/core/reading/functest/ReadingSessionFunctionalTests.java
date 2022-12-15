@@ -1,10 +1,12 @@
 package org.zith.expr.ctxwl.core.reading.functest;
 
 import org.junit.jupiter.api.Test;
+import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
 import org.zith.expr.ctxwl.core.reading.impl.ReadingServiceTuner;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.concurrent.Phaser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,5 +53,18 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
         phaser.arriveAndAwaitAdvance();
         thread1.join();
         thread2.join();
+    }
+
+    @Test
+    public void testCreatingHistoryEntry() throws Exception {
+        var session = readingService().makeSession("test");
+        session.create(
+                0,
+                new ReadingHistoryEntryValue(
+                        "http://example.com",
+                        Optional.of("test content"),
+                        Optional.of(Instant.now()),
+                        Optional.empty(),
+                        Optional.empty()));
     }
 }

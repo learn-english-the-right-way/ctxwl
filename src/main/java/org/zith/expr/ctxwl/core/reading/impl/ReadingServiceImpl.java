@@ -115,6 +115,10 @@ public class ReadingServiceImpl implements ReadingService {
         var readingSessionFactory =
                 componentFactory.createReadingSessionFactoryImpl(sessionFactory, readingHistoryEntryRepository, clock);
 
+        if (reinitializeData) {
+            readingHistoryEntryRepository.drop();
+        }
+
         return implementationFactory.create(
                 componentFactory,
                 dataSource,

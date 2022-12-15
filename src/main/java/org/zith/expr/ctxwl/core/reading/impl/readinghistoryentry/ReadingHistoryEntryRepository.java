@@ -9,4 +9,6 @@ public interface ReadingHistoryEntryRepository {
 
     <Session extends ReadingSession>
     BoundReadingHistoryEntry<Session> get(Session session, long serial);
+
+    void drop();
 }

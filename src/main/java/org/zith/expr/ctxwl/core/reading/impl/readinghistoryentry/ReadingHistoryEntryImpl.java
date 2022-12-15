@@ -52,7 +52,8 @@ public class ReadingHistoryEntryImpl<Session extends ReadingSession> implements 
                 value.text().orElse(null),
                 value.creationTime().orElse(null),
                 value.updateTime().orElse(null),
-                value.majorSerial().orElse(null)); // TODO
+                value.majorSerial().orElse(null),
+                null); // TODO
     }
 
     @Override
