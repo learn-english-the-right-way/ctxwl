@@ -5,7 +5,7 @@ import org.hibernate.annotations.NaturalId;
 import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserEntity_;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.function.Supplier;
 
 @Entity

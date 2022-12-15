@@ -2,7 +2,7 @@ package org.zith.expr.ctxwl.core.reading.impl.readingsession;
 
 import com.google.common.base.Preconditions;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;

@@ -4,7 +4,7 @@ import com.google.common.base.Suppliers;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Where;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.function.Supplier;
 

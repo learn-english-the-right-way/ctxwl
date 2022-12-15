@@ -2,7 +2,7 @@ package org.zith.expr.ctxwl.core.identity.impl.repository.user;
 
 import com.google.common.base.Suppliers;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.function.Supplier;
 
 @Entity

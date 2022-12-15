@@ -1,6 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;

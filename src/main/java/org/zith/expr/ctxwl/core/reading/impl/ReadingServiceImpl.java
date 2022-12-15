@@ -94,7 +94,7 @@ public class ReadingServiceImpl implements ReadingService {
                 .applySetting(AvailableSettings.DATASOURCE, dataSource)
                 .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true);
         if (reinitializeData) {
-            serviceRegistryBuilder.applySetting(AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP);
+            serviceRegistryBuilder.applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop");
         }
         var serviceRegistry = serviceRegistryBuilder.build();
         var metadata = new MetadataSources(serviceRegistry)

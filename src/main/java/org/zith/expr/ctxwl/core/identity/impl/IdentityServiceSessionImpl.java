@@ -15,7 +15,7 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserRepositoryImpl
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
-import javax.persistence.OptimisticLockException;
+import jakarta.persistence.OptimisticLockException;
 import java.time.Clock;
 import java.util.function.Supplier;
 

@@ -2,7 +2,7 @@ package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import org.hibernate.annotations.NaturalId;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class ResourceApplicationKeyCodeEntity {

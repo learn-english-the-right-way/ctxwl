@@ -4,7 +4,7 @@ import com.google.common.base.Suppliers;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity_;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.function.Supplier;
 

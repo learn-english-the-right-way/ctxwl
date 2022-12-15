@@ -10,8 +10,8 @@ import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.core.reading.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
 
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
