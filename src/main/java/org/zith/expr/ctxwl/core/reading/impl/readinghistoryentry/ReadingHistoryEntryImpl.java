@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry;
 
+import org.bson.types.ObjectId;
 import org.jetbrains.annotations.Nullable;
 import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
@@ -12,17 +13,20 @@ public class ReadingHistoryEntryImpl<Session extends ReadingSession> implements 
     private final ReadingHistoryEntryRepositoryImpl repository;
     private final Session session;
     private final long serial;
+    private @Nullable ObjectId reference;
     private @Nullable ReadingHistoryEntryDocument document;
 
     private ReadingHistoryEntryImpl(
             ReadingHistoryEntryRepositoryImpl repository,
             Session session,
             long serial,
+            @Nullable ObjectId reference,
             @Nullable ReadingHistoryEntryDocument document
     ) {
         this.repository = repository;
         this.session = session;
         this.serial = serial;
+        this.reference = reference;
         this.document = document;
     }
 
@@ -38,7 +42,12 @@ public class ReadingHistoryEntryImpl<Session extends ReadingSession> implements 
 
     private ReadingHistoryEntryDocument document() {
         if (document == null) {
-            document = repository.fetch(session.getGroup(), session.getSerial(), serial);
+            if (reference == null) {
+                document = repository.fetch(session, serial);
+                reference = document.id();
+            } else {
+                document = repository.fetch(reference);
+            }
         }
         return document;
     }
@@ -85,8 +94,9 @@ public class ReadingHistoryEntryImpl<Session extends ReadingSession> implements 
             ReadingHistoryEntryRepositoryImpl repository,
             Session session,
             long serial,
+            @Nullable ObjectId reference,
             @Nullable ReadingHistoryEntryDocument document
     ) {
-        return new ReadingHistoryEntryImpl<>(repository, session, serial, document);
+        return new ReadingHistoryEntryImpl<>(repository, session, serial, reference, document);
     }
 }

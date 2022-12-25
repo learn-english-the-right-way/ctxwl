@@ -13,7 +13,7 @@ public record ReadingInspiredLookupDocument(
         Long offset,
         Instant creationTime
 ) {
-    public ObjectId historyEntryId() {
+    public ObjectId historyEntryReference() {
         return Optional.ofNullable(id).map(Id::parent).orElse(null);
     }
 

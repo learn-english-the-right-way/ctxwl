@@ -73,12 +73,12 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
                 null
         );
         collectionOfReadHistoryEntries.insertOne(document); // TODO handle conflicts
-        return componentFactory.createReadingHistoryEntryImpl(this, session, serial, document);
+        return componentFactory.createReadingHistoryEntryImpl(this, session, serial, null, document);
     }
 
     @Override
     public <Session extends ReadingSession> BoundReadingHistoryEntry<Session> get(Session session, long serial) {
-        return null; // TODO
+        return componentFactory.createReadingHistoryEntryImpl(this, session, serial, null, null);
     }
 
     @Override
@@ -116,7 +116,34 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
         }
     }
 
-    public ReadingHistoryEntryDocument fetch(String sessionGroup, long sessionSerial, long serial) {
-        return null; // TODO
+    @Override
+    public <Session extends ReadingSession> BoundReadingHistoryEntry<Session> get(
+            Session session,
+            long serial,
+            ObjectId reference
+    ) {
+        return componentFactory.createReadingHistoryEntryImpl(this, session, serial, reference, null);
+    }
+
+    ReadingHistoryEntryDocument fetch(ReadingSession session, long serial) {
+        var document = collectionOfReadHistoryEntries
+                .find(Filters.and(
+                        Filters.eq(ReadingHistoryEntryDocument.Fields.session_group, session.getGroup()),
+                        Filters.eq(ReadingHistoryEntryDocument.Fields.session_serial, session.getSerial()),
+                        Filters.eq(ReadingHistoryEntryDocument.Fields.serial, serial)
+                ))
+                .projection(Projections.include(ReadingHistoryEntryDocument.Fields.id))
+                .first();
+
+        return Objects.requireNonNull(document);
+    }
+
+    ReadingHistoryEntryDocument fetch(ObjectId reference) {
+        var document = collectionOfReadHistoryEntries
+                .find(Filters.eq(ReadingHistoryEntryDocument.Fields.id, reference))
+                .projection(Projections.include(ReadingHistoryEntryDocument.Fields.id))
+                .first();
+
+        return Objects.requireNonNull(document);
     }
 }

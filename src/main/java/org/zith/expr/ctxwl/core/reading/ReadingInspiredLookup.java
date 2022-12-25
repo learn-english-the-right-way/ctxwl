@@ -6,7 +6,7 @@ public interface ReadingInspiredLookup extends ReadingInspiredLookupValueLike {
 
     ReadingSession session();
 
-    Optional<ReadingHistoryEntry> readingHistoryEntry();
+    Optional<ReadingHistoryEntry> historyEntry();
 
     long serial();
 

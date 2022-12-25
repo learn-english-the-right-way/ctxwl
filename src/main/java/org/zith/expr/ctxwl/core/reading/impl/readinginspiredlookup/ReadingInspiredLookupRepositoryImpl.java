@@ -44,7 +44,7 @@ public class ReadingInspiredLookupRepositoryImpl implements ReadingInspiredLooku
                 readingInspiredLookupValue.creationTime().orElse(null)
         );
         collectionOfReadingInspiredLookups.insertOne(document); // TODO handle conflicts
-        return componentFactory.createReadingInspiredLookupImpl();
+        return componentFactory.createReadingInspiredLookupImpl(this, session, historyEntrySerial, serial, document);
     }
 
     public static ReadingInspiredLookupRepositoryImpl create(
@@ -63,5 +63,13 @@ public class ReadingInspiredLookupRepositoryImpl implements ReadingInspiredLooku
                 readingHistoryEntryRepository,
                 collectionOfReadingInspiredLookups
         );
+    }
+
+    ReadingHistoryEntryRepository readingHistoryEntryRepository() {
+        return readingHistoryEntryRepository;
+    }
+
+    ReadingInspiredLookupDocument fetch(ReadingSession session, long historyEntrySerial, long serial) {
+        return null; // TODO
     }
 }

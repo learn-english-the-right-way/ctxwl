@@ -1,6 +1,7 @@
 package org.zith.expr.ctxwl.core.reading.impl;
 
 import com.mongodb.client.MongoDatabase;
+import org.bson.types.ObjectId;
 import org.hibernate.SessionFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +12,7 @@ import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryE
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepositoryImpl;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupDocument;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepositoryImpl;
@@ -84,12 +86,19 @@ public interface ComponentFactory {
             ReadingHistoryEntryRepositoryImpl repository,
             Session session,
             long serial,
+            @Nullable ObjectId reference,
             @Nullable ReadingHistoryEntryDocument document
     ) {
-        return ReadingHistoryEntryImpl.create(repository, session, serial, document);
+        return ReadingHistoryEntryImpl.create(repository, session, serial, reference, document);
     }
 
-    default <Session extends ReadingSession> ReadingInspiredLookupImpl<Session> createReadingInspiredLookupImpl() {
-        return ReadingInspiredLookupImpl.create();
+    default <Session extends ReadingSession> ReadingInspiredLookupImpl<Session> createReadingInspiredLookupImpl(
+            ReadingInspiredLookupRepositoryImpl repository,
+            Session session,
+            long historyEntrySerial,
+            long serial,
+            @Nullable ReadingInspiredLookupDocument document
+    ) {
+        return ReadingInspiredLookupImpl.create(repository, session, historyEntrySerial, serial, document);
     }
 }

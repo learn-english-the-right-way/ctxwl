@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
+import org.zith.expr.ctxwl.core.reading.ReadingInspiredLookup;
 import org.zith.expr.ctxwl.core.reading.ReadingInspiredLookupValue;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
@@ -48,8 +49,9 @@ public class ReadingInspiredLookupWebCollection {
         }
 
         var readingSessionResolver = new ReadingSessionResolver(readingService, securityContext);
+        ReadingInspiredLookup result;
         try (var readingSession = readingSessionResolver.resolve(sessionGroup, sessionSerial)) {
-            readingSession.createLookup(
+            result = readingSession.createLookup(
                     entrySerial,
                     serial,
                     new ReadingInspiredLookupValue(
@@ -57,9 +59,15 @@ public class ReadingInspiredLookupWebCollection {
                             document.offset(),
                             document.creationTime()
                     ));
-            // TODO
         }
 
-        return null;
+        return new ReadingInspiredLookupWebDocument(
+                "%s-%d".formatted(result.session().getGroup(), result.session().getSerial()),
+                result.historyEntrySerial(),
+                result.serial(),
+                result.criterion(),
+                result.offset(),
+                result.creationTime()
+        );
     }
 }
