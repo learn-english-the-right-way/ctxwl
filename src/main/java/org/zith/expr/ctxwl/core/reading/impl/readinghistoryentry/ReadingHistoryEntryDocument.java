@@ -5,6 +5,7 @@ import org.bson.types.ObjectId;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionKeyDocument;
 
 import java.time.Instant;
+import java.util.List;
 
 public record ReadingHistoryEntryDocument(
         ReadingSessionKeyDocument session,
@@ -18,6 +19,7 @@ public record ReadingHistoryEntryDocument(
         ObjectId id
 ) {
     public static final class Fields {
+        public static final String id = "_id";
         public static final String session_group = "session.group";
         public static final String session_serial = "session.serial";
         public static final String serial = "serial";

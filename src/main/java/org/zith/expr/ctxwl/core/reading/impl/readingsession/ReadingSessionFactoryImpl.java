@@ -2,6 +2,8 @@ package org.zith.expr.ctxwl.core.reading.impl.readingsession;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.exception.ConstraintViolationException;
@@ -9,9 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.core.reading.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
 
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PersistenceException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -24,17 +25,20 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
     private final ComponentFactory componentFactory;
     private final SessionFactory sessionFactory;
     private final ReadingHistoryEntryRepository readingHistoryEntryRepository;
+    private final ReadingInspiredLookupRepository readingInspiredLookupRepository;
     private final Clock clock;
 
     public ReadingSessionFactoryImpl(
             ComponentFactory componentFactory,
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
         this.componentFactory = componentFactory;
         this.sessionFactory = sessionFactory;
         this.readingHistoryEntryRepository = readingHistoryEntryRepository;
+        this.readingInspiredLookupRepository = readingInspiredLookupRepository;
         this.clock = clock;
     }
 
@@ -169,13 +173,24 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
             ComponentFactory componentFactory,
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
-        return new ReadingSessionFactoryImpl(componentFactory, sessionFactory, readingHistoryEntryRepository, clock);
+        return new ReadingSessionFactoryImpl(
+                componentFactory,
+                sessionFactory,
+                readingHistoryEntryRepository,
+                readingInspiredLookupRepository,
+                clock
+        );
     }
 
     ReadingHistoryEntryRepository getReadingHistoryEntryRepository() {
         return readingHistoryEntryRepository;
+    }
+
+    ReadingInspiredLookupRepository getReadingInspiredLookupRepository() {
+        return readingInspiredLookupRepository;
     }
 
     Clock getClock() {

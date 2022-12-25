@@ -3,6 +3,7 @@ package org.zith.expr.ctxwl.core.reading.impl.readingsession;
 import org.hibernate.SessionFactory;
 import org.zith.expr.ctxwl.core.reading.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
 
 import java.time.Clock;
 import java.util.Optional;
@@ -15,9 +16,10 @@ public class InterceptedReadingSessionFactoryImpl extends ReadingSessionFactoryI
             ComponentFactory componentFactory,
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
-        super(componentFactory, sessionFactory, readingHistoryEntryRepository, clock);
+        super(componentFactory, sessionFactory, readingHistoryEntryRepository, readingInspiredLookupRepository, clock);
         interceptors = new ConcurrentLinkedQueue<>();
     }
 
@@ -37,12 +39,14 @@ public class InterceptedReadingSessionFactoryImpl extends ReadingSessionFactoryI
             ComponentFactory componentFactory,
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
         return new InterceptedReadingSessionFactoryImpl(
                 componentFactory,
                 sessionFactory,
                 readingHistoryEntryRepository,
+                readingInspiredLookupRepository,
                 clock
         );
     }

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.common.mongodb.MongoDbConfiguration;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.*;
 
 import java.time.Clock;
@@ -23,9 +24,16 @@ public class InterceptedComponentFactory implements ComponentFactory {
     public @NotNull InterceptedReadingSessionFactoryImpl createReadingSessionFactoryImpl(
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
-        return InterceptedReadingSessionFactoryImpl.create(this, sessionFactory, readingHistoryEntryRepository, clock);
+        return InterceptedReadingSessionFactoryImpl.create(
+                this,
+                sessionFactory,
+                readingHistoryEntryRepository,
+                readingInspiredLookupRepository,
+                clock
+        );
     }
 
     @Override

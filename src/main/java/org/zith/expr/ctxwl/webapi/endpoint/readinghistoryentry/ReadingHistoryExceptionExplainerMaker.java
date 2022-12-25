@@ -9,9 +9,6 @@ public class ReadingHistoryExceptionExplainerMaker
         extends AbstractExceptionExplainerMaker<ReadingHistoryErrorCode, ReadingHistoryException> {
     private static final Map<ReadingHistoryErrorCode, Response.StatusType>
             statusMap = Map.of(
-            ReadingHistoryErrorCode.SESSION_ACCESS_NOT_AUTHORIZED, Response.Status.FORBIDDEN,
-            ReadingHistoryErrorCode.SESSION_NOT_FOUND, Response.Status.NOT_FOUND,
-            ReadingHistoryErrorCode.INVALID_CREDENTIAL, Response.Status.FORBIDDEN,
             ReadingHistoryErrorCode.FIELD_NOT_ACCEPTED, Response.Status.CONFLICT
     );
 

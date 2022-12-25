@@ -6,14 +6,14 @@ import com.google.inject.TypeLiteral;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
-import org.zith.expr.ctxwl.core.accesscontrol.Realm;
-import org.zith.expr.ctxwl.webapi.authentication.RealmFactory;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationException;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationExceptionModule;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationFilter;
+import org.zith.expr.ctxwl.webapi.authentication.RealmFactory;
 import org.zith.expr.ctxwl.webapi.common.WebApiDataException;
 import org.zith.expr.ctxwl.webapi.common.WebApiExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationExceptionModule;
@@ -22,6 +22,9 @@ import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationEx
 import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry.ReadingHistoryEntryWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry.ReadingHistoryExceptionModule;
+import org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup.ReadingInspiredLookupExceptionModule;
+import org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup.ReadingInspiredLookupWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionWebCollection;
 import org.zith.expr.ctxwl.webapi.mapper.ObjectMapperProvider;
 
@@ -43,6 +46,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
         register(AuthenticationWebCollection.class);
         register(EmailRegistrationWebCollection.class);
         register(ReadingHistoryEntryWebCollection.class);
+        register(ReadingInspiredLookupWebCollection.class);
         register(ReadingSessionWebCollection.class);
 
         var injector = Guice.createInjector(
@@ -50,7 +54,9 @@ public class CtxwlWebApiApplication extends ResourceConfig {
                 new CtxwlKeyAuthenticationExceptionModule(),
                 new AuthenticationExceptionModule(),
                 new EmailRegistrationExceptionModule(),
-                new ReadingHistoryExceptionModule()
+                new ReadingHistoryExceptionModule(),
+                new ReadingInspiredLookupExceptionModule(),
+                new ReadingSessionExceptionModule()
         );
         register(injector.getInstance(Key.get(new TypeLiteral<ExceptionMapper<WebApiDataException>>() {
         })));

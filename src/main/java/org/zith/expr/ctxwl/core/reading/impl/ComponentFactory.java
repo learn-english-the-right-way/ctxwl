@@ -11,6 +11,9 @@ import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryE
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
 import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepositoryImpl;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupImpl;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepositoryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionEntity;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionFactoryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionImpl;
@@ -22,9 +25,16 @@ public interface ComponentFactory {
     default ReadingSessionFactoryImpl createReadingSessionFactoryImpl(
             SessionFactory sessionFactory,
             ReadingHistoryEntryRepository readingHistoryEntryRepository,
+            ReadingInspiredLookupRepository readingInspiredLookupRepository,
             Clock clock
     ) {
-        return ReadingSessionFactoryImpl.create(this, sessionFactory, readingHistoryEntryRepository, clock);
+        return ReadingSessionFactoryImpl.create(
+                this,
+                sessionFactory,
+                readingHistoryEntryRepository,
+                readingInspiredLookupRepository,
+                clock
+        );
     }
 
     @NotNull
@@ -49,8 +59,24 @@ public interface ComponentFactory {
         return Clock.systemDefaultZone();
     }
 
-    default ReadingHistoryEntryRepositoryImpl createReadingHistoryEntryRepositoryImpl(MongoDatabase mongoDatabase) {
-        return ReadingHistoryEntryRepositoryImpl.create(this, mongoDatabase);
+    default ReadingHistoryEntryRepositoryImpl createReadingHistoryEntryRepositoryImpl(
+            MongoDatabase mongoDatabase,
+            boolean reinitializeData
+    ) {
+        return ReadingHistoryEntryRepositoryImpl.create(this, mongoDatabase, reinitializeData);
+    }
+
+    default ReadingInspiredLookupRepositoryImpl createReadingInspiredLookupRepositoryImpl(
+            ReadingHistoryEntryRepository createReadingHistoryEntryRepository,
+            MongoDatabase mongoDatabase,
+            boolean reinitializeData
+    ) {
+        return ReadingInspiredLookupRepositoryImpl.create(
+                this,
+                createReadingHistoryEntryRepository,
+                mongoDatabase,
+                reinitializeData
+        );
     }
 
     @NotNull
@@ -61,5 +87,9 @@ public interface ComponentFactory {
             @Nullable ReadingHistoryEntryDocument document
     ) {
         return ReadingHistoryEntryImpl.create(repository, session, serial, document);
+    }
+
+    default <Session extends ReadingSession> ReadingInspiredLookupImpl<Session> createReadingInspiredLookupImpl() {
+        return ReadingInspiredLookupImpl.create();
     }
 }

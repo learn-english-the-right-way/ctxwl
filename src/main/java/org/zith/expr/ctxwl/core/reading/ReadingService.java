@@ -6,4 +6,7 @@ public interface ReadingService extends AutoCloseable {
     ReadingSession makeSession(String group);
 
     Optional<ReadingSession> loadSession(String group, long serial);
+
+    @Override
+    void close();
 }

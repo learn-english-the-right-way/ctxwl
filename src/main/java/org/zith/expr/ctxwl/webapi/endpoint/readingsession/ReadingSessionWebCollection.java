@@ -5,12 +5,12 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jetbrains.annotations.NotNull;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
-import org.zith.expr.ctxwl.core.reading.ReadingService;
-import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.core.accesscontrol.ActiveResourceRole;
 import org.zith.expr.ctxwl.core.accesscontrol.ApplicationKeyRole;
 import org.zith.expr.ctxwl.core.accesscontrol.Principal;
+import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.reading.ReadingService;
+import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 
@@ -52,8 +52,9 @@ public class ReadingSessionWebCollection {
         var applicationKey = optionalApplicationKey.get();
 
         // TODO avoid exposing credentials in URLs
-        var readingSession = readingService.makeSession(escape(applicationKey));
-        return makeWebDocument(readingSession);
+        try (var readingSession = readingService.makeSession(escape(applicationKey))) {
+            return makeWebDocument(readingSession);
+        }
     }
 
     @NotNull

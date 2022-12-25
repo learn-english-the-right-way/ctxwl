@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.reading.impl;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
@@ -25,9 +26,19 @@ public class InterceptedReadingServiceImpl extends ReadingServiceImpl {
             Metadata metadata,
             SessionFactory sessionFactory,
             ReadingSessionFactory readingSessionFactory,
+            MongoClient mongoClient,
             MongoDatabase mongoDatabase
     ) {
-        super(componentFactory, dataSource, serviceRegistry, metadata, sessionFactory, readingSessionFactory, mongoDatabase);
+        super(
+                componentFactory,
+                dataSource,
+                serviceRegistry,
+                metadata,
+                sessionFactory,
+                readingSessionFactory,
+                mongoClient,
+                mongoDatabase
+        );
         this.readingSessionFactory = readingSessionFactory;
         interceptors = new ConcurrentLinkedQueue<>();
     }
@@ -41,7 +52,8 @@ public class InterceptedReadingServiceImpl extends ReadingServiceImpl {
         return create(
                 InterceptedReadingServiceImpl::new,
                 componentFactory,
-                true, postgreSqlConfiguration,
+                true,
+                postgreSqlConfiguration,
                 mongoConfiguration,
                 clock
         );

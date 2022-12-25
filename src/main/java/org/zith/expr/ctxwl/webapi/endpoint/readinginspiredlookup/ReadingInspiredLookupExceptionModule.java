@@ -1,4 +1,4 @@
-package org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry;
+package org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup;
 
 import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
@@ -15,11 +15,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class ReadingHistoryExceptionModule extends AbstractModule {
+public class ReadingInspiredLookupExceptionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ReadingHistoryExceptionExplainerMaker.class).in(Scopes.SINGLETON);
+        bind(ReadingInspiredLookupExceptionExplainerMaker.class).in(Scopes.SINGLETON);
         bind(ExplainerRepository.class).in(Scopes.SINGLETON);
         Multibinder.newSetBinder(binder(), WebApiExceptionExplainerRepository.class)
                 .addBinding().to(ExplainerRepository.class);
@@ -27,40 +27,40 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
 
     public static class ExplainerRepository implements WebApiExceptionExplainerRepository {
         private final WebApiExceptionModule.ExplainerRepository baseExplainerRepository;
-        private final ReadingHistoryExceptionExplainerMaker readingHistoryExceptionExplainerMaker;
-        private final Supplier<ExceptionExplainer<ReadingHistoryException>> readingHistoryExceptionSupplier;
-        private final Supplier<ExceptionExplainer<ReadingHistoryException.FieldNotAcceptedException>>
+        private final ReadingInspiredLookupExceptionExplainerMaker readingInspiredLookupExceptionExplainerMaker;
+        private final Supplier<ExceptionExplainer<ReadingInspiredLookupException>> readingInspiredLookupExceptionSupplier;
+        private final Supplier<ExceptionExplainer<ReadingInspiredLookupException.FieldNotAcceptedException>>
                 fieldNotModifiableExceptionSupplier;
 
         @Inject
         public ExplainerRepository(
                 WebApiExceptionModule.ExplainerRepository baseExplainerRepository,
-                ReadingHistoryExceptionExplainerMaker readingHistoryExceptionExplainerMaker
+                ReadingInspiredLookupExceptionExplainerMaker readingInspiredLookupExceptionExplainerMaker
         ) {
             this.baseExplainerRepository = baseExplainerRepository;
-            this.readingHistoryExceptionExplainerMaker = readingHistoryExceptionExplainerMaker;
+            this.readingInspiredLookupExceptionExplainerMaker = readingInspiredLookupExceptionExplainerMaker;
 
-            readingHistoryExceptionSupplier = Suppliers.memoize(() ->
-                    this.readingHistoryExceptionExplainerMaker.make(
-                            ReadingHistoryErrorCode.INVALID_REQUEST,
-                            ReadingHistoryException.class,
+            readingInspiredLookupExceptionSupplier = Suppliers.memoize(() ->
+                    this.readingInspiredLookupExceptionExplainerMaker.make(
+                            ReadingInspiredLookupErrorCode.INVALID_REQUEST,
+                            ReadingInspiredLookupException.class,
                             (code, exception) -> SimpleExceptionCauseExplanation.create(code,
                                     "You request is invalid.")));
             fieldNotModifiableExceptionSupplier = Suppliers.memoize(() ->
-                    this.readingHistoryExceptionExplainerMaker.make(
-                            ReadingHistoryErrorCode.FIELD_NOT_ACCEPTED,
-                            ReadingHistoryException.FieldNotAcceptedException.class,
+                    this.readingInspiredLookupExceptionExplainerMaker.make(
+                            ReadingInspiredLookupErrorCode.FIELD_NOT_ACCEPTED,
+                            ReadingInspiredLookupException.FieldNotAcceptedException.class,
                             (code, exception) -> SimpleExceptionCauseExplanation.create(
                                     code,
                                     "You were trying to update field '%s' to an unacceptable value."
                                             .formatted(exception.getFieldName()))));
         }
 
-        public ExceptionExplainer<ReadingHistoryException> readingHistoryException() {
-            return readingHistoryExceptionSupplier.get();
+        public ExceptionExplainer<ReadingInspiredLookupException> readingInspiredLookupException() {
+            return readingInspiredLookupExceptionSupplier.get();
         }
 
-        public ExceptionExplainer<ReadingHistoryException.FieldNotAcceptedException> fieldNotModifiableException() {
+        public ExceptionExplainer<ReadingInspiredLookupException.FieldNotAcceptedException> fieldNotModifiableException() {
             return fieldNotModifiableExceptionSupplier.get();
         }
 
@@ -68,12 +68,12 @@ public class ReadingHistoryExceptionModule extends AbstractModule {
         public Collection<ExceptionExplainerDescriptor> descriptors() {
             return List.of(
                     ExceptionExplainerDescriptor.of(
-                            readingHistoryException(),
+                            readingInspiredLookupException(),
                             baseExplainerRepository.webApiExceptionExplainer()
                     ),
                     ExceptionExplainerDescriptor.of(
                             fieldNotModifiableException(),
-                            readingHistoryException()
+                            readingInspiredLookupException()
                     )
             );
         }

@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.core.reading.functest;
 
 import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
+import org.zith.expr.ctxwl.core.reading.ReadingInspiredLookupValue;
 import org.zith.expr.ctxwl.core.reading.impl.ReadingServiceTuner;
 
 import java.time.Instant;
@@ -32,16 +33,18 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
                     phaser.arriveAndAwaitAdvance();
                     phaser.arriveAndAwaitAdvance();
                 });
-                var session = readingService().makeSession("testCreatingSessionWithContention");
-                assertEquals(1, session.getSerial());
+                try (var session = readingService().makeSession("testCreatingSessionWithContention")) {
+                    assertEquals(1, session.getSerial());
+                }
                 phaser.arriveAndAwaitAdvance();
             }
         });
         var thread2 = new Thread(() -> {
             phaser.arriveAndAwaitAdvance();
             phaser.arriveAndAwaitAdvance();
-            var session = readingService().makeSession("testCreatingSessionWithContention");
-            assertEquals(0, session.getSerial());
+            try (var session = readingService().makeSession("testCreatingSessionWithContention")) {
+                assertEquals(0, session.getSerial());
+            }
             phaser.arriveAndAwaitAdvance();
             phaser.arriveAndAwaitAdvance();
         });
@@ -57,14 +60,24 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
 
     @Test
     public void testCreatingHistoryEntry() throws Exception {
-        var session = readingService().makeSession("test");
-        session.create(
-                0,
-                new ReadingHistoryEntryValue(
-                        "http://example.com",
-                        Optional.of("test content"),
-                        Optional.of(Instant.now()),
-                        Optional.empty(),
-                        Optional.empty()));
+        try (var session = readingService().makeSession("test")) {
+            session.createHistoryEntry(
+                    0,
+                    new ReadingHistoryEntryValue(
+                            "http://example.com",
+                            Optional.of("test content"),
+                            Optional.of(Instant.now()),
+                            Optional.empty(),
+                            Optional.empty()));
+            session.createLookup(
+                    0,
+                    0,
+                    new ReadingInspiredLookupValue(
+                            "content",
+                            Optional.of(5L),
+                            Optional.of(Instant.now())
+                    )
+            );
+        }
     }
 }

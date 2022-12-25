@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.reading.impl;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import org.hibernate.SessionFactory;
@@ -15,6 +16,7 @@ import org.zith.expr.ctxwl.common.mongodb.MongoDbConfiguration;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
+import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepositoryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionEntity;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionFactory;
 
@@ -31,6 +33,7 @@ public class ReadingServiceImpl implements ReadingService {
     private final Metadata metadata;
     private final SessionFactory sessionFactory;
     private final ReadingSessionFactory readingSessionFactory;
+    private final MongoClient mongoClient;
     private final MongoDatabase mongoDatabase;
 
     protected ReadingServiceImpl(
@@ -40,6 +43,7 @@ public class ReadingServiceImpl implements ReadingService {
             Metadata metadata,
             SessionFactory sessionFactory,
             ReadingSessionFactory readingSessionFactory,
+            MongoClient mongoClient,
             MongoDatabase mongoDatabase
     ) {
         this.componentFactory = componentFactory;
@@ -48,6 +52,7 @@ public class ReadingServiceImpl implements ReadingService {
         this.metadata = metadata;
         this.sessionFactory = sessionFactory;
         this.readingSessionFactory = readingSessionFactory;
+        this.mongoClient = mongoClient;
         this.mongoDatabase = mongoDatabase;
     }
 
@@ -105,19 +110,21 @@ public class ReadingServiceImpl implements ReadingService {
                 .build();
         var sessionFactory = metadata.getSessionFactoryBuilder().build();
 
+        var mongoClient = MongoClients.create(mongoConfiguration.makeMongoClientSettings());
+
         var mongoDatabase =
-                MongoClients.create(mongoConfiguration.makeMongoClientSettings())
-                        .getDatabase(Objects.requireNonNull(mongoConfiguration.connectionString().getDatabase()));
+                mongoClient.getDatabase(Objects.requireNonNull(mongoConfiguration.connectionString().getDatabase()));
 
         var readingHistoryEntryRepository =
-                componentFactory.createReadingHistoryEntryRepositoryImpl(mongoDatabase);
+                componentFactory.createReadingHistoryEntryRepositoryImpl(mongoDatabase, reinitializeData);
+
+        var readingInspiredLookupRepository =
+                componentFactory.createReadingInspiredLookupRepositoryImpl(
+                        readingHistoryEntryRepository, mongoDatabase, reinitializeData);
 
         var readingSessionFactory =
-                componentFactory.createReadingSessionFactoryImpl(sessionFactory, readingHistoryEntryRepository, clock);
-
-        if (reinitializeData) {
-            readingHistoryEntryRepository.drop();
-        }
+                componentFactory.createReadingSessionFactoryImpl(
+                        sessionFactory, readingHistoryEntryRepository, readingInspiredLookupRepository, clock);
 
         return implementationFactory.create(
                 componentFactory,
@@ -126,14 +133,16 @@ public class ReadingServiceImpl implements ReadingService {
                 metadata,
                 sessionFactory,
                 readingSessionFactory,
+                mongoClient,
                 mongoDatabase
         );
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         sessionFactory.close();
         serviceRegistry.close();
+        mongoClient.close();
     }
 
     protected interface ImplementationFactory<T extends ReadingServiceImpl> {
@@ -144,6 +153,7 @@ public class ReadingServiceImpl implements ReadingService {
                 Metadata metadata,
                 SessionFactory sessionFactory,
                 ReadingSessionFactory readingSessionFactory,
+                MongoClient mongoClient,
                 MongoDatabase mongoDatabase
         );
     }

@@ -6,6 +6,7 @@ public enum WebApiComponent implements ErrorScope {
     API("api"),
     SESSION_AUTHENTICATION("session_authentication"),
     EMAIL_REGISTRATION("email_registration"),
+    READING_SESSION("reading_session"),
     READING_HISTORY("reading_history");
 
     private final String identifier;

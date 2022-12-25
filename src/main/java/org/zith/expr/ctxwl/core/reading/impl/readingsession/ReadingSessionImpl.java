@@ -1,9 +1,7 @@
 package org.zith.expr.ctxwl.core.reading.impl.readingsession;
 
 import com.google.common.base.Preconditions;
-import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntry;
-import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
-import org.zith.expr.ctxwl.core.reading.ReadingSession;
+import org.zith.expr.ctxwl.core.reading.*;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -72,8 +70,18 @@ public class ReadingSessionImpl implements ReadingSession {
     }
 
     @Override
-    public ReadingHistoryEntry create(long serial, ReadingHistoryEntryValue value) {
+    public ReadingHistoryEntry createHistoryEntry(long serial, ReadingHistoryEntryValue value) {
         return factory.getReadingHistoryEntryRepository().create(this, serial, value);
+    }
+
+    @Override
+    public ReadingInspiredLookup createLookup(
+            long historyEntrySerial,
+            long serial,
+            ReadingInspiredLookupValue readingInspiredLookupValue
+    ) {
+        return factory.getReadingInspiredLookupRepository()
+                .create(this, historyEntrySerial, serial, readingInspiredLookupValue);
     }
 
     @Override
@@ -97,6 +105,11 @@ public class ReadingSessionImpl implements ReadingSession {
                 .filter(s -> Objects.equals(s.getCode(), entity.getStatus()))
                 .findAny()
                 .orElse(Status._UNKNOWN);
+    }
+
+    @Override
+    public void close() {
+        // TODO
     }
 
     enum Status {

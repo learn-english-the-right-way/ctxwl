@@ -1,9 +1,9 @@
-package org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry;
+package org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup;
 
 import org.zith.expr.ctxwl.webapi.common.WebApiDataException;
 
-public class ReadingHistoryException extends WebApiDataException {
-    public static class FieldNotAcceptedException extends ReadingHistoryException {
+public class ReadingInspiredLookupException extends WebApiDataException {
+    public static class FieldNotAcceptedException extends ReadingInspiredLookupException {
 
         private final String fieldName;
 
