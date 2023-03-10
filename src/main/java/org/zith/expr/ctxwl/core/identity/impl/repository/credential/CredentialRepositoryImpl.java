@@ -2,7 +2,6 @@ package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
 import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
@@ -30,8 +29,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     public ControlledResource ensure(ControlledResourceType resourceType, String identifier) {
         return session
                 .byNaturalId(ResourceEntity.class)
-                .using("name", makeName(resourceType, identifier))
-                .with(LockOptions.READ)
+                .using(ResourceEntity_.NAME, makeName(resourceType, identifier))
                 .loadOptional()
                 .map(ResourceEntity::getDelegate)
                 .map(r -> r.bind(this))
@@ -61,7 +59,8 @@ public class CredentialRepositoryImpl implements CredentialRepository {
                         .anyMatch(e -> Objects.equals(k.getKeyUsage(), keyUsageName(e.getValue())) &&
                                 Objects.equals(k.getResource().getType(), typeName(e.getKey()))))
                 .map(ResourceApplicationKeyEntity::getResource)
-                .map(ResourceEntity::getDelegate).map(r -> r.bind(this));
+                .map(ResourceEntity::getDelegate)
+                .map(r -> r.bind(this));
     }
 
     Session getSession() {

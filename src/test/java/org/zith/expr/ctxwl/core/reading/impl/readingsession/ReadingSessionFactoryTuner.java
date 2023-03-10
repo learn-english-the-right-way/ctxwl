@@ -4,6 +4,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @NotThreadSafe
@@ -12,6 +13,7 @@ public class ReadingSessionFactoryTuner implements AutoCloseable {
     private final ThreadLocal<Context> context;
     private final ConcurrentLinkedQueue<ReadingSessionTuner> readingSessionTuners;
     private final AtomicReference<Consumer<ReadingSessionEntity>> callbackOnInsertion;
+    private final AtomicReference<BiConsumer<ReadingSessionEntity, ReadingSessionEntity>> callbackOnRotation;
     private InterceptedReadingSessionFactoryImpl.Interceptor.Cancellation cancellation;
 
     public ReadingSessionFactoryTuner() {
@@ -19,6 +21,7 @@ public class ReadingSessionFactoryTuner implements AutoCloseable {
         context = new ThreadLocal<>();
         readingSessionTuners = new ConcurrentLinkedQueue<>();
         callbackOnInsertion = new AtomicReference<>();
+        callbackOnRotation = new AtomicReference<>();
     }
 
     public boolean tune(ReadingSessionFactory readingSessionFactory) {
@@ -58,6 +61,11 @@ public class ReadingSessionFactoryTuner implements AutoCloseable {
         public void interceptInsertion(ReadingSessionEntity entity) {
             Optional.ofNullable(callbackOnInsertion.getAndSet(null)).ifPresent(c -> c.accept(entity));
         }
+
+        public void interceptRotation(ReadingSessionEntity entity, ReadingSessionEntity placeholderEntity) {
+            Optional.ofNullable(callbackOnRotation.getAndSet(null))
+                    .ifPresent(c -> c.accept(entity, placeholderEntity));
+        }
     }
 
     private class Interceptor implements InterceptedReadingSessionFactoryImpl.Interceptor {
@@ -74,6 +82,11 @@ public class ReadingSessionFactoryTuner implements AutoCloseable {
         @Override
         public void interceptInsertion(ReadingSessionEntity entity) {
             Optional.ofNullable(context.get()).ifPresent(c -> c.interceptInsertion(entity));
+        }
+
+        @Override
+        public void interceptRotation(ReadingSessionEntity entity, ReadingSessionEntity placeholderEntity) {
+            Optional.ofNullable(context.get()).ifPresent(c -> c.interceptRotation(entity, placeholderEntity));
         }
     }
 }

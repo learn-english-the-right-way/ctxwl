@@ -5,8 +5,11 @@ import com.mongodb.client.MongoDatabase;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.zith.expr.ctxwl.common.close.CombinedAutoCloseable;
 import org.zith.expr.ctxwl.common.mongodb.MongoDbConfiguration;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
+import org.zith.expr.ctxwl.common.wordnet.WordNet;
+import org.zith.expr.ctxwl.core.reading.impl.readinginducedwordlist.ReadingInducedWordlistRepository;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionFactory;
 
 import javax.sql.DataSource;
@@ -21,23 +24,29 @@ public class InterceptedReadingServiceImpl extends ReadingServiceImpl {
 
     protected InterceptedReadingServiceImpl(
             ComponentFactory componentFactory,
+            CombinedAutoCloseable closeable,
             DataSource dataSource,
             StandardServiceRegistry serviceRegistry,
             Metadata metadata,
             SessionFactory sessionFactory,
-            ReadingSessionFactory readingSessionFactory,
             MongoClient mongoClient,
-            MongoDatabase mongoDatabase
+            MongoDatabase mongoDatabase,
+            WordNet wordNet,
+            ReadingSessionFactory readingSessionFactory,
+            ReadingInducedWordlistRepository readingInducedWordlistRepository
     ) {
         super(
                 componentFactory,
+                closeable,
                 dataSource,
                 serviceRegistry,
                 metadata,
                 sessionFactory,
-                readingSessionFactory,
                 mongoClient,
-                mongoDatabase
+                mongoDatabase,
+                wordNet,
+                readingSessionFactory,
+                readingInducedWordlistRepository
         );
         this.readingSessionFactory = readingSessionFactory;
         interceptors = new ConcurrentLinkedQueue<>();

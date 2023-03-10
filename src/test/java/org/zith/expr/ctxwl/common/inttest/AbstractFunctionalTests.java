@@ -3,7 +3,9 @@ package org.zith.expr.ctxwl.common.inttest;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Tag;
+import org.zith.expr.ctxwl.common.close.CombinedAutoCloseable;
 
 import java.io.File;
 import java.util.List;
@@ -15,6 +17,12 @@ import java.util.stream.Stream;
 
 @Tag("functional")
 public abstract class AbstractFunctionalTests<C> {
+    protected static final CombinedAutoCloseable combinedAutoCloseable = CombinedAutoCloseable.create();
+
+    @AfterAll
+    public static void clean() {
+        combinedAutoCloseable.close();
+    }
 
     private static final String CONFIGURATION_PATH_PROPERTY = "org.zith.expr.ctxwl.common.functest.configuration.path";
     private static final String CONFIGURATION_PATH_ENV = "CTXWL_FUNCTEST_CONFIG";

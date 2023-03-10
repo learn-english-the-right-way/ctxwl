@@ -1,6 +1,7 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import jakarta.persistence.*;
+
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
@@ -122,7 +123,6 @@ public class ResourcePasswordEntity {
         public Key() {
         }
 
-        @Id
         public Long getResourceId() {
             return resourceId;
         }
@@ -131,7 +131,6 @@ public class ResourcePasswordEntity {
             this.resourceId = resourceId;
         }
 
-        @Id
         public Integer getId() {
             return id;
         }

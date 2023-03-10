@@ -30,6 +30,12 @@ public class InterceptedReadingSessionFactoryImpl extends ReadingSessionFactoryI
     }
 
     @Override
+    protected void interceptRotation(ReadingSessionEntity entity, ReadingSessionEntity placeholderEntity) {
+        interceptors.forEach(i -> i.interceptRotation(entity, placeholderEntity));
+        super.interceptRotation(entity, placeholderEntity);
+    }
+
+    @Override
     protected void interceptCreatingSession(ReadingSessionImpl readingSession) {
         interceptors.forEach(i -> i.interceptCreatingSession(readingSession));
         super.interceptCreatingSession(readingSession);
@@ -74,6 +80,8 @@ public class InterceptedReadingSessionFactoryImpl extends ReadingSessionFactoryI
         void interceptCreatingSession(ReadingSessionImpl readingSession);
 
         void interceptInsertion(ReadingSessionEntity entity);
+
+        void interceptRotation(ReadingSessionEntity entity, ReadingSessionEntity placeholderEntity);
 
         interface Cancellation {
             void cancel();

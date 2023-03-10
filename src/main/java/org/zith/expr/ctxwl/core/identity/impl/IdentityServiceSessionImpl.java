@@ -2,11 +2,13 @@ package org.zith.expr.ctxwl.core.identity.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import jakarta.persistence.OptimisticLockException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zith.expr.ctxwl.common.hibernate.DataAccessor;
 import org.zith.expr.ctxwl.core.identity.*;
 import org.zith.expr.ctxwl.core.identity.impl.repository.credential.CredentialRepositoryImpl;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailRepositoryImpl;
@@ -15,7 +17,6 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserRepositoryImpl
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
-import jakarta.persistence.OptimisticLockException;
 import java.time.Clock;
 import java.util.function.Supplier;
 
@@ -29,6 +30,7 @@ public class IdentityServiceSessionImpl implements IdentityServiceSession {
     private final Supplier<UserRepositoryImpl> userRepositorySupplier;
     private final Supplier<EmailRepositoryImpl> emailRepositorySupplier;
     private final Supplier<EmailRegistrationRepositoryImpl> emailRegistrationRepositorySupplier;
+    private final DataAccessor.Factory dataAccessorFactory;
 
     public IdentityServiceSessionImpl(
             ComponentFactory componentFactory,
@@ -47,6 +49,7 @@ public class IdentityServiceSessionImpl implements IdentityServiceSession {
                 createEmailRepository(session, mailService, userRepositorySupplier.get()));
         emailRegistrationRepositorySupplier = Suppliers.memoize(() ->
                 createEmailRegistrationRepository(session, clock, emailRepositorySupplier.get(), credentialRepositorySupplier.get()));
+        dataAccessorFactory = DataAccessor.Factory.of(e -> e instanceof OptimisticLockException, 5);
     }
 
     @NotNull
@@ -102,32 +105,7 @@ public class IdentityServiceSessionImpl implements IdentityServiceSession {
 
     @Override
     public <T> T withTransaction(Supplier<T> supplier) {
-        for (int attempt = 0; ; ++attempt) {
-            try {
-                T value;
-                var transaction = session.getTransaction();
-                transaction.begin();
-                boolean succeeded = false;
-                try {
-                    value = supplier.get();
-                    if (!transaction.getRollbackOnly()) {
-                        transaction.commit();
-                        succeeded = true;
-                    }
-                } finally {
-                    if (!succeeded && transaction.isActive()) {
-                        transaction.rollback();
-                    }
-                }
-                return value;
-            } catch (OptimisticLockException e) {
-                if (attempt < 5) {
-                    logger.info("Retrying transaction");
-                } else {
-                    throw e;
-                }
-            }
-        }
+        return dataAccessorFactory.create(ignored -> supplier.get()).execute(session);
     }
 
     @Override

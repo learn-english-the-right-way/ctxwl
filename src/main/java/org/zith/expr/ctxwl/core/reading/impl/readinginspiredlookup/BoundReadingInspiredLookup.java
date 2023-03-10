@@ -4,4 +4,5 @@ import org.zith.expr.ctxwl.core.reading.ReadingInspiredLookup;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 
 public interface BoundReadingInspiredLookup<Session extends ReadingSession> extends ReadingInspiredLookup {
+    Session session();
 }

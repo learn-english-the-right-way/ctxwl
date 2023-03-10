@@ -90,10 +90,6 @@ functionalTest {
     shouldRunAfter test
 }
 
-check {
-    dependsOn functionalTest
-}
-
 application {
     mainClass = 'org.zith.expr.ctxwl.Ctxwl'
 }

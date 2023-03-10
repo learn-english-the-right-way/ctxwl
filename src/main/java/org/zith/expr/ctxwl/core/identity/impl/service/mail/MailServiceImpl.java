@@ -1,13 +1,13 @@
 package org.zith.expr.ctxwl.core.identity.impl.service.mail;
 
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import org.jetbrains.annotations.Nullable;
 import org.zith.expr.ctxwl.core.identity.Email;
 import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.EmailException;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
 import java.util.Objects;
 import java.util.Properties;
 

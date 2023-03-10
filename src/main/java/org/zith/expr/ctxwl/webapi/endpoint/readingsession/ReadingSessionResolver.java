@@ -38,6 +38,7 @@ public class ReadingSessionResolver {
 
         var applicationKey = optionalApplicationKey.get();
 
+        // TODO avoid exposing credentials in URLs
         if (!Objects.equals(ReadingSessionWebCollection.escape(applicationKey), group)) {
             throw new ReadingSessionException.UnauthorizedAccessToSessionException();
         }

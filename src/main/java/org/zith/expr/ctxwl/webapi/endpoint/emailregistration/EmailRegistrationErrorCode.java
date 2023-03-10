@@ -1,7 +1,7 @@
 package org.zith.expr.ctxwl.webapi.endpoint.emailregistration;
 
-import org.zith.expr.ctxwl.webapi.error.ErrorCode;
 import org.zith.expr.ctxwl.webapi.common.WebApiComponent;
+import org.zith.expr.ctxwl.webapi.error.ErrorCode;
 
 public enum EmailRegistrationErrorCode implements ErrorCode {
     INVALID_REQUEST("invalid_request"),

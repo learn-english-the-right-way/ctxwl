@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl;
 
+import org.zith.expr.ctxwl.common.close.CombinedAutoCloseable;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
@@ -11,18 +12,20 @@ import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.Credentia
 
 import java.security.SecureRandom;
 import java.time.Clock;
-import java.util.Random;
 
 public class IdentityServiceImpl implements IdentityService {
+    private final CombinedAutoCloseable closeable;
     private final IdentityServiceSessionFactory identityServiceSessionFactory;
     private final CredentialManager credentialManager;
     private final Clock clock;
 
     private IdentityServiceImpl(
+            CombinedAutoCloseable closeable,
             IdentityServiceSessionFactory identityServiceSessionFactory,
             CredentialManager credentialManager,
             Clock clock
     ) {
+        this.closeable = closeable;
         this.identityServiceSessionFactory = identityServiceSessionFactory;
         this.credentialManager = credentialManager;
         this.clock = clock;
@@ -40,8 +43,7 @@ public class IdentityServiceImpl implements IdentityService {
 
     @Override
     public void close() {
-        identityServiceSessionFactory.close();
-        credentialManager.close();
+        closeable.close();
     }
 
     public static IdentityServiceImpl create(
@@ -51,17 +53,21 @@ public class IdentityServiceImpl implements IdentityService {
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
     ) {
-        var credentialSchema = CredentialSchemaImpl.create(secureRandom, clock);
-        var identityServiceSessionFactory =
-                componentFactory.createIdentityServiceSessionFactoryImpl(
-                        credentialSchema,
-                        clock,
-                        reinitializeData,
-                        postgreSqlConfiguration,
-                        mailConfiguration
-                );
-        var credentialManager = CredentialManagerImpl.create(credentialSchema, identityServiceSessionFactory);
-        return new IdentityServiceImpl(identityServiceSessionFactory, credentialManager, clock);
+        try (var closeable = CombinedAutoCloseable.create()) {
+            var credentialSchema = CredentialSchemaImpl.create(secureRandom, clock);
+            var identityServiceSessionFactory = closeable.register(
+                    componentFactory.createIdentityServiceSessionFactoryImpl(
+                            credentialSchema,
+                            clock,
+                            reinitializeData,
+                            postgreSqlConfiguration,
+                            mailConfiguration
+                    ));
+            var credentialManager = closeable.register(
+                    CredentialManagerImpl.create(credentialSchema, identityServiceSessionFactory));
+            return new IdentityServiceImpl(
+                    closeable.transfer(), identityServiceSessionFactory, credentialManager, clock);
+        }
     }
 
 }

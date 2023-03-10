@@ -1,10 +1,10 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
 import com.google.common.base.Suppliers;
+import jakarta.persistence.*;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Where;
 
-import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.function.Supplier;
 

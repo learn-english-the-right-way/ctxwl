@@ -7,9 +7,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.core.reading.ReadingHistoryEntryValue;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.core.reading.impl.ComponentFactory;
+import org.zith.expr.ctxwl.core.reading.impl.common.CollectionNames;
+import org.zith.expr.ctxwl.core.reading.impl.common.SessionProvider;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionKeyDocument;
 
 import java.util.List;
@@ -38,16 +41,23 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
             boolean reinitializeData
     ) {
         var collectionOfReadHistoryEntries =
-                mongoDatabase.getCollection("readingHistoryEntries", ReadingHistoryEntryDocument.class);
+                mongoDatabase.getCollection(CollectionNames.READING_HISTORY_ENTRIES, ReadingHistoryEntryDocument.class);
         if (reinitializeData) {
             collectionOfReadHistoryEntries.drop();
         }
-        collectionOfReadHistoryEntries.createIndexes(
-                List.of(new IndexModel(Indexes.ascending(
+        collectionOfReadHistoryEntries.createIndexes(List.of(
+                new IndexModel(Indexes.ascending(
                         ReadingHistoryEntryDocument.Fields.session_group,
                         ReadingHistoryEntryDocument.Fields.session_serial,
                         ReadingHistoryEntryDocument.Fields.serial),
-                        new IndexOptions().unique(true))));
+                        new IndexOptions().unique(true)),
+                new IndexModel(Indexes.ascending(
+                        ReadingHistoryEntryDocument.Fields.updateTime,
+                        ReadingHistoryEntryDocument.Fields.creationTime),
+                        new IndexOptions()
+                                .partialFilterExpression(Filters.and(
+                                        Filters.exists(ReadingHistoryEntryDocument.Fields.unprocessed),
+                                        Filters.eq(ReadingHistoryEntryDocument.Fields.unprocessed, true))))));
         return new ReadingHistoryEntryRepositoryImpl(componentFactory, collectionOfReadHistoryEntries);
     }
 
@@ -70,6 +80,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
                 value.creationTime().get(),
                 null,
                 null,
+                true,
                 null
         );
         collectionOfReadHistoryEntries.insertOne(document); // TODO handle conflicts
@@ -90,6 +101,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
                     new ReadingHistoryEntryDocument(
                             new ReadingSessionKeyDocument(session.getGroup(), session.getSerial()),
                             serial,
+                            null,
                             null,
                             null,
                             null,
@@ -117,6 +129,12 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
     }
 
     @Override
+    public <Session extends ReadingSession> BoundReadingHistoryEntry<Session>
+    resolveReference(SessionProvider<Session> sessionProvider, ObjectId reference) {
+        return componentFactory.createReadingHistoryEntryImpl(this, sessionProvider, reference, null);
+    }
+
+    @Override
     public <Session extends ReadingSession> BoundReadingHistoryEntry<Session> get(
             Session session,
             long serial,
@@ -125,6 +143,7 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
         return componentFactory.createReadingHistoryEntryImpl(this, session, serial, reference, null);
     }
 
+    @NotNull
     ReadingHistoryEntryDocument fetch(ReadingSession session, long serial) {
         var document = collectionOfReadHistoryEntries
                 .find(Filters.and(
@@ -132,16 +151,15 @@ public class ReadingHistoryEntryRepositoryImpl implements ReadingHistoryEntryRep
                         Filters.eq(ReadingHistoryEntryDocument.Fields.session_serial, session.getSerial()),
                         Filters.eq(ReadingHistoryEntryDocument.Fields.serial, serial)
                 ))
-                .projection(Projections.include(ReadingHistoryEntryDocument.Fields.id))
                 .first();
 
         return Objects.requireNonNull(document);
     }
 
+    @NotNull
     ReadingHistoryEntryDocument fetch(ObjectId reference) {
         var document = collectionOfReadHistoryEntries
                 .find(Filters.eq(ReadingHistoryEntryDocument.Fields.id, reference))
-                .projection(Projections.include(ReadingHistoryEntryDocument.Fields.id))
                 .first();
 
         return Objects.requireNonNull(document);

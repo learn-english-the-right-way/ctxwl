@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.zith.expr.ctxwl.app.config.AppConfigurator;
+import org.zith.expr.ctxwl.common.close.CombinedAutoCloseable;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceCreator;
 import org.zith.expr.ctxwl.core.reading.ReadingServiceCreator;
 import org.zith.expr.ctxwl.webapi.CtxwlWebApiApplication;
@@ -77,22 +78,24 @@ public class CtxwlApplication {
         Optional.ofNullable(arguments.config()).ifPresent(config -> configurator.load(new File(config)));
         var configuration = configurator.configuration();
 
-        var identityService =
-                IdentityServiceCreator.create(
-                        Objects.equals(configuration.core().identity().reinitializeData(), true),
-                        configuration.core().identity().postgreSql().effectiveConfiguration(),
-                        configuration.core().identity().mail().effectiveConfiguration());
+        try (var closeable = CombinedAutoCloseable.create()) {
+            var identityService = closeable.register(
+                    IdentityServiceCreator.create(
+                            Objects.equals(configuration.core().identity().reinitializeData(), true),
+                            configuration.core().identity().postgreSql().effectiveConfiguration(),
+                            configuration.core().identity().mail().effectiveConfiguration()));
 
-        var readingService =
-                ReadingServiceCreator.create(
-                        Objects.equals(configuration.core().reading().reinitializeData(), true),
-                        configuration.core().reading().postgreSql().effectiveConfiguration(),
-                        configuration.core().reading().mongoDb().effectiveConfiguration());
+            var readingService = closeable.register(
+                    ReadingServiceCreator.create(
+                            Objects.equals(configuration.core().reading().reinitializeData(), true),
+                            configuration.core().reading().postgreSql().effectiveConfiguration(),
+                            configuration.core().reading().mongoDb().effectiveConfiguration()));
 
-        var server = JettyHttpContainerFactory.createServer(
-                URI.create(configuration.webApi().effectiveBaseUri()),
-                new CtxwlWebApiApplication(identityService, readingService));
-        server.start();
+            var server = JettyHttpContainerFactory.createServer(
+                    URI.create(configuration.webApi().effectiveBaseUri()),
+                    new CtxwlWebApiApplication(identityService, readingService));
+            server.start();
+        }
     }
 
     public static CtxwlApplication create(String[] args) {

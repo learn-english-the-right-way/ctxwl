@@ -1,7 +1,5 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.credential;
 
-import org.hibernate.annotations.NaturalId;
-
 import jakarta.persistence.*;
 
 @Entity

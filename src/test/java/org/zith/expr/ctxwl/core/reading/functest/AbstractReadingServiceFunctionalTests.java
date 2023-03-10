@@ -15,10 +15,11 @@ public abstract class AbstractReadingServiceFunctionalTests extends AbstractFunc
     private final Supplier<ReadingService> readingServiceSupplier;
 
     public AbstractReadingServiceFunctionalTests() {
-        readingServiceSupplier = Suppliers.memoize(() -> InterceptedReadingServiceCreator.create(
-                configuration().postgreSql().effectiveConfiguration(),
-                configuration().mongoDb().effectiveConfiguration()
-        ));
+        readingServiceSupplier = Suppliers.memoize(() -> combinedAutoCloseable.register(
+                InterceptedReadingServiceCreator.create(
+                        configuration().postgreSql().effectiveConfiguration(),
+                        configuration().mongoDb().effectiveConfiguration()
+                )));
     }
 
     protected final ReadingService readingService() {

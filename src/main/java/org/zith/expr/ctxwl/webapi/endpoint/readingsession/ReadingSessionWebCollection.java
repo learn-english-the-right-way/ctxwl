@@ -5,7 +5,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jetbrains.annotations.NotNull;
-import org.zith.expr.ctxwl.core.accesscontrol.Principal;
 import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
@@ -13,7 +12,6 @@ import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlPrincipal;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -34,14 +32,20 @@ public class ReadingSessionWebCollection {
 
     @POST
     public ReadingSessionWebDocument create(ReadingSessionWebDocument document) throws Exception {
-        var optionalApplicationKey =
+        var optionalPrincipal =
                 Stream.of(securityContext.getUserPrincipal())
                         .filter(CtxwlPrincipal.class::isInstance)
                         .map(CtxwlPrincipal.class::cast)
                         .flatMap(p -> p.getCompositingPrincipal(ControlledResourceType.USER).stream())
-                        .map(Principal::applicationKeys)
-                        .flatMap(Collection::stream)
                         .findFirst();
+
+        if (optionalPrincipal.isEmpty()) {
+            throw new ForbiddenException();
+        }
+
+        var principal = optionalPrincipal.get();
+
+        var optionalApplicationKey = principal.applicationKeys().stream().findFirst();
 
         if (optionalApplicationKey.isEmpty()) {
             throw new ForbiddenException();
@@ -49,8 +53,8 @@ public class ReadingSessionWebCollection {
 
         var applicationKey = optionalApplicationKey.get();
 
-        // TODO avoid exposing credentials in URLs
-        try (var readingSession = readingService.makeSession(escape(applicationKey))) {
+        // TODO avoid exposing credentials in URLs; avoid carrying fixed principal identifier out of identity service
+        try (var readingSession = readingService.makeSession(escape(applicationKey), principal.name())) {
             return makeWebDocument(readingSession);
         }
     }

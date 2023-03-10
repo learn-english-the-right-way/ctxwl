@@ -18,6 +18,8 @@ public interface ReadingSession extends AutoCloseable {
             ReadingInspiredLookupValue readingInspiredLookupValue
     );
 
+    String getWordlist();
+
     Optional<Instant> getUpdateTime();
 
     Optional<Instant> getCompletionTime();

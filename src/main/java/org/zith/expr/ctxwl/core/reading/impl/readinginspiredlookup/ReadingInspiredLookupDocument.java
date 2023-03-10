@@ -11,7 +11,8 @@ public record ReadingInspiredLookupDocument(
         Id id,
         String criterion,
         Long offset,
-        Instant creationTime
+        Instant creationTime,
+        Boolean unprocessed
 ) {
     public ObjectId historyEntryReference() {
         return Optional.ofNullable(id).map(Id::parent).orElse(null);
@@ -22,5 +23,14 @@ public record ReadingInspiredLookupDocument(
     }
 
     public record Id(ObjectId parent, Long serial) {
+    }
+
+    public static final class Fields {
+        public static final String id = "_id";
+        public static final String creationTime = "creationTime";
+        public static final String unprocessed = "unprocessed";
+
+        private Fields() {
+        }
     }
 }

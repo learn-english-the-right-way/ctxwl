@@ -7,11 +7,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.zith.expr.ctxwl.common.mongodb.MongoDbConfiguration;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
+import org.zith.expr.ctxwl.common.wordnet.WordNet;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
-import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryDocument;
-import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryImpl;
-import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepository;
-import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.ReadingHistoryEntryRepositoryImpl;
+import org.zith.expr.ctxwl.core.reading.impl.common.SessionProvider;
+import org.zith.expr.ctxwl.core.reading.impl.readinghistoryentry.*;
+import org.zith.expr.ctxwl.core.reading.impl.readinginducedwordlist.ReadingInducedWordlistRepositoryImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupDocument;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupImpl;
 import org.zith.expr.ctxwl.core.reading.impl.readinginspiredlookup.ReadingInspiredLookupRepository;
@@ -92,6 +92,16 @@ public interface ComponentFactory {
         return ReadingHistoryEntryImpl.create(repository, session, serial, reference, document);
     }
 
+    @NotNull
+    default <Session extends ReadingSession> ReadingHistoryEntryImpl<Session> createReadingHistoryEntryImpl(
+            ReadingHistoryEntryRepositoryImpl repository,
+            SessionProvider<Session> sessionProvider,
+            ObjectId reference,
+            @Nullable ReadingHistoryEntryDocument document
+    ) {
+        return ReadingHistoryEntryImpl.create(repository, sessionProvider, reference, document);
+    }
+
     default <Session extends ReadingSession> ReadingInspiredLookupImpl<Session> createReadingInspiredLookupImpl(
             ReadingInspiredLookupRepositoryImpl repository,
             Session session,
@@ -100,5 +110,21 @@ public interface ComponentFactory {
             @Nullable ReadingInspiredLookupDocument document
     ) {
         return ReadingInspiredLookupImpl.create(repository, session, historyEntrySerial, serial, document);
+    }
+
+    default <Session extends ReadingSession> ReadingInspiredLookupImpl<Session> createReadingInspiredLookupImpl(
+            ReadingInspiredLookupRepositoryImpl repository,
+            BoundReadingHistoryEntry<Session> historyEntry,
+            long serial,
+            @Nullable ReadingInspiredLookupDocument document
+    ) {
+        return ReadingInspiredLookupImpl.create(repository, historyEntry, serial, document);
+    }
+
+    default ReadingInducedWordlistRepositoryImpl createReadingInducedWordlistRepositoryImpl(
+            SessionFactory sessionFactory,
+            WordNet wordNet
+    ) {
+        return new ReadingInducedWordlistRepositoryImpl(sessionFactory, wordNet);
     }
 }

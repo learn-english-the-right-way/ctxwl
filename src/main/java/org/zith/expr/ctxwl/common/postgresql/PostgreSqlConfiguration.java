@@ -55,6 +55,7 @@ public final class PostgreSqlConfiguration {
 
     public enum TransactionIsolation {
         TRANSACTION_READ_COMMITTED("TRANSACTION_READ_COMMITTED"),
+        TRANSACTION_REPEATABLE_READ("TRANSACTION_REPEATABLE_READ"),
         TRANSACTION_SERIALIZABLE("TRANSACTION_SERIALIZABLE");
 
         private final String name;

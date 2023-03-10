@@ -1,10 +1,10 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.emailregistration;
 
 import com.google.common.base.Suppliers;
+import jakarta.persistence.*;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity;
 import org.zith.expr.ctxwl.core.identity.impl.repository.email.EmailEntity_;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.function.Supplier;
 

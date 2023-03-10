@@ -1,8 +1,8 @@
 package org.zith.expr.ctxwl.core.reading.impl.readingsession;
 
 import com.google.common.base.Preconditions;
-
 import jakarta.persistence.*;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -21,6 +21,7 @@ public class ReadingSessionEntity {
     private String group;
     private Long serial;
     private String status;
+    private String wordlist;
     private Instant creationTime;
     private Instant updateTime;
     private Instant completionTime;
@@ -60,6 +61,14 @@ public class ReadingSessionEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setWordlist(String wordlist) {
+        this.wordlist = wordlist;
+    }
+
+    public String getWordlist() {
+        return wordlist;
     }
 
     @Column(columnDefinition = "timestamp with time zone")

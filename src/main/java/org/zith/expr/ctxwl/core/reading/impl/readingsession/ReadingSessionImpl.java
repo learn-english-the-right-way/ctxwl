@@ -85,6 +85,11 @@ public class ReadingSessionImpl implements ReadingSession {
     }
 
     @Override
+    public String getWordlist() {
+        return entity.getWordlist();
+    }
+
+    @Override
     public Optional<Instant> getUpdateTime() {
         return Optional.ofNullable(entity.getUpdateTime());
     }

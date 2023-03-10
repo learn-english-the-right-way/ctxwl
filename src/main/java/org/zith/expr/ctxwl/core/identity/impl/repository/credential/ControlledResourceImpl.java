@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
-import org.zith.expr.ctxwl.core.identity.ControlledResourceUniversalIdentifier;
 import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceUniversalIdentifier;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;

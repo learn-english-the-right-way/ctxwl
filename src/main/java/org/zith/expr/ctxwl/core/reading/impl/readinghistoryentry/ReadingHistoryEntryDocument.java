@@ -5,7 +5,6 @@ import org.bson.types.ObjectId;
 import org.zith.expr.ctxwl.core.reading.impl.readingsession.ReadingSessionKeyDocument;
 
 import java.time.Instant;
-import java.util.List;
 
 public record ReadingHistoryEntryDocument(
         ReadingSessionKeyDocument session,
@@ -15,6 +14,7 @@ public record ReadingHistoryEntryDocument(
         Instant creationTime,
         Instant updateTime,
         Long majorSerial,
+        Boolean unprocessed,
         @BsonId
         ObjectId id
 ) {
@@ -23,6 +23,9 @@ public record ReadingHistoryEntryDocument(
         public static final String session_group = "session.group";
         public static final String session_serial = "session.serial";
         public static final String serial = "serial";
+        public static final String creationTime = "creationTime";
+        public static final String updateTime = "updateTime";
+        public static final String unprocessed = "unprocessed";
 
         private Fields() {
         }

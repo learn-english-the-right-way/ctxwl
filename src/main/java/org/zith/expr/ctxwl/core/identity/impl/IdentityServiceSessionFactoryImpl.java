@@ -6,7 +6,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.schema.Action;
 import org.zith.expr.ctxwl.common.hibernate.LowerUnderscorePhysicalNamingStrategy;
 import org.zith.expr.ctxwl.common.hibernate.SuffixStripingImplicitNamingStrategy;
 import org.zith.expr.ctxwl.common.postgresql.PostgreSqlConfiguration;
@@ -73,9 +72,8 @@ public class IdentityServiceSessionFactoryImpl implements IdentityServiceSession
             MailConfiguration mailConfiguration
     ) {
         var dataSource =
-                postgreSqlConfiguration.makeDataSource(
-                        PostgreSqlConfiguration.TransactionIsolation.TRANSACTION_SERIALIZABLE
-                );
+                postgreSqlConfiguration
+                        .makeDataSource(PostgreSqlConfiguration.TransactionIsolation.TRANSACTION_SERIALIZABLE);
         var serviceRegistryBuilder = new StandardServiceRegistryBuilder()
                 .applySetting(AvailableSettings.DATASOURCE, dataSource)
                 .applySetting(AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, true);
