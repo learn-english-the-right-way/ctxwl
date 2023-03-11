@@ -1,5 +1,6 @@
 package org.zith.expr.ctxwl.core.identity.impl.service.credentialschema;
 
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.time.Instant;
@@ -17,9 +18,9 @@ public interface CredentialSchema {
 
     boolean validateStructureOfPassword(String password);
 
-    String makeName(CredentialManager.ResourceType resourceType, String identifier);
+    String makeName(ControlledResourceType resourceType, String identifier);
 
-    String typeName(CredentialManager.ResourceType resourceType);
+    String typeName(ControlledResourceType resourceType);
 
     String keyUsageName(CredentialManager.KeyUsage keyUsage);
 

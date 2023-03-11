@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.webapi.authentication;
 
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.Factory;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.accesscontrol.Realm;
@@ -18,10 +19,10 @@ public class RealmFactory implements Factory<Realm> {
     public Realm provide() {
         return Realm.builder()
                 .authenticationMethod(
-                        CredentialManager.ResourceType.EMAIL_REGISTRATION,
+                        ControlledResourceType.EMAIL_REGISTRATION,
                         CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION)
                 .authenticationMethod(
-                        CredentialManager.ResourceType.USER,
+                        ControlledResourceType.USER,
                         CredentialManager.KeyUsage.USER_AUTHENTICATION)
                 .credentialManager(identityService.credentialManager())
                 .build();

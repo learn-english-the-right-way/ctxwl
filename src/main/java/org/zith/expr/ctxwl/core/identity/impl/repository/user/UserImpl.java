@@ -1,7 +1,7 @@
 package org.zith.expr.ctxwl.core.identity.impl.repository.user;
 
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.UserRepository;
 
 public class UserImpl implements ManagedUser {
@@ -17,7 +17,7 @@ public class UserImpl implements ManagedUser {
     public ControlledResource getControlledResource() {
         if (controlledResource == null) {
             controlledResource = repository.getCredentialRepository().ensure(
-                    CredentialManager.ResourceType.USER,
+                    ControlledResourceType.USER,
                     entity.getId().toString()
             );
         }

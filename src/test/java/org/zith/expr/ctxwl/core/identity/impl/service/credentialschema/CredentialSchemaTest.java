@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Random;
 import java.util.Set;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CredentialSchemaTest {
     @Test
     public void testAuthenticationKeyGenerationAndValidation() {
-        var repository = CredentialSchemaImpl.create(new Random(), Clock.systemDefaultZone());
+        var repository = CredentialSchemaImpl.create(new SecureRandom(), Clock.systemDefaultZone());
         repository.updateKeys(0, new String[]{"TestKey"});
         var code =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
@@ -24,7 +25,7 @@ class CredentialSchemaTest {
 
     @Test
     public void testAuthenticationKeyGenerationAndValidationWithAdditionalMainKeys() {
-        var repository = CredentialSchemaImpl.create(new Random(), Clock.systemDefaultZone());
+        var repository = CredentialSchemaImpl.create(new SecureRandom(), Clock.systemDefaultZone());
         repository.updateKeys(0, new String[]{"TestKey1"});
         var code1 =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
@@ -43,7 +44,7 @@ class CredentialSchemaTest {
 
     @Test
     public void testNoKey() {
-        var repository = CredentialSchemaImpl.create(new Random(), Clock.systemDefaultZone());
+        var repository = CredentialSchemaImpl.create(new SecureRandom(), Clock.systemDefaultZone());
         var code =
                 "TestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCodeTestCode0000".getBytes(StandardCharsets.UTF_8);
         var key = repository.makeApplicationKey(CredentialManager.KeyUsage.REGISTRATION_CONFIRMATION, code);

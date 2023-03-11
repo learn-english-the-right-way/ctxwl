@@ -6,14 +6,13 @@ import com.google.inject.TypeLiteral;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.zith.expr.ctxwl.core.accesscontrol.AccessPolicy;
 import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationException;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationExceptionModule;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyAuthenticationFilter;
-import org.zith.expr.ctxwl.webapi.authentication.RealmFactory;
+import org.zith.expr.ctxwl.webapi.authentication.*;
+import org.zith.expr.ctxwl.webapi.authorization.AccessPolicyFactory;
 import org.zith.expr.ctxwl.webapi.common.WebApiDataException;
 import org.zith.expr.ctxwl.webapi.common.WebApiExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationExceptionModule;
@@ -70,6 +69,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
             bind(identityService).to(IdentityService.class).to(IdentityServiceSessionFactory.class);
             bind(readingService).to(ReadingService.class);
             bindFactory(RealmFactory.class).to(Realm.class);
+            bindFactory(AccessPolicyFactory.class).to(AccessPolicy.class);
         }
     }
 }

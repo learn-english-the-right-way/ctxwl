@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import org.jetbrains.annotations.NotNull;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -13,20 +14,20 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Realm {
-    Optional<CredentialManager.KeyUsage> resolveAuthenticatingKeyUsage(CredentialManager.ResourceType type);
+    Optional<CredentialManager.KeyUsage> resolveAuthenticatingKeyUsage(ControlledResourceType type);
 
     @NotNull Comparator<ControlledResource> controlledResourceComparator();
+
+    List<Principal> authenticate(List<String> applicationKeys);
 
     static Builder builder() {
         return new Builder();
     }
 
-    Optional<Principal> authenticate(List<String> applicationKeys);
-
     @NotThreadSafe
     final class Builder {
-        private final ArrayList<CredentialManager.ResourceType> orderedResources;
-        private final ImmutableBiMap.Builder<CredentialManager.ResourceType, CredentialManager.KeyUsage>
+        private final ArrayList<ControlledResourceType> orderedResources;
+        private final ImmutableBiMap.Builder<ControlledResourceType, CredentialManager.KeyUsage>
                 resourceTypeKeyUsageMapBuilder;
         private CredentialManager credentialManager;
 
@@ -36,7 +37,7 @@ public interface Realm {
         }
 
         public Builder authenticationMethod(
-                CredentialManager.ResourceType resourceType,
+                ControlledResourceType resourceType,
                 CredentialManager.KeyUsage keyUsage
         ) {
             orderedResources.add(resourceType);

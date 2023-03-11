@@ -5,9 +5,11 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Ints;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
@@ -21,27 +23,27 @@ import java.util.stream.Stream;
 public class CredentialSchemaImpl implements CredentialSchema {
     private final static Pattern PASSWORD_PATTERN = Pattern.compile("^[\\p{ASCII}&&[^\\p{Blank}\\p{Cntrl}]]{8,32}$");
 
-    private final Random random;
+    private final SecureRandom secureRandom;
     private final Clock clock;
     private MetaKeyChain metaKeyChain;
 
-    private CredentialSchemaImpl(Random random, Clock clock) {
-        Objects.requireNonNull(random);
+    private CredentialSchemaImpl(SecureRandom secureRandom, Clock clock) {
+        Objects.requireNonNull(secureRandom);
         Objects.requireNonNull(clock);
-        this.random = random;
+        this.secureRandom = secureRandom;
         this.clock = clock;
         metaKeyChain = new MetaKeyChain(-1, new String[]{""});
     }
 
-    public static CredentialSchema create(Random random, Clock clock) {
-        return new CredentialSchemaImpl(random, clock);
+    public static CredentialSchema create(SecureRandom secureRandom, Clock clock) {
+        return new CredentialSchemaImpl(secureRandom, clock);
     }
 
     @Override
     public byte[] makeSalt(int size) {
         Preconditions.checkArgument(size > 0);
         var salt = new byte[size];
-        random.nextBytes(salt);
+        secureRandom.nextBytes(salt);
         return salt;
     }
 
@@ -54,7 +56,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
     public byte[] makeEntropicCode(int size) {
         Preconditions.checkArgument(size > 0);
         var salt = new byte[size];
-        random.nextBytes(salt);
+        secureRandom.nextBytes(salt);
         return salt;
     }
 
@@ -69,7 +71,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public String makeName(CredentialManager.ResourceType resourceType, String identifier) {
+    public String makeName(ControlledResourceType resourceType, String identifier) {
         StringBuilder sb = new StringBuilder();
         sb.append(typeName(resourceType));
         sb.append(':');
@@ -78,7 +80,7 @@ public class CredentialSchemaImpl implements CredentialSchema {
     }
 
     @Override
-    public String typeName(CredentialManager.ResourceType resourceType) {
+    public String typeName(ControlledResourceType resourceType) {
         return switch (resourceType) {
             case USER -> "user";
             case EMAIL_REGISTRATION -> "email_registration";

@@ -6,12 +6,12 @@ import java.util.Optional;
 
 public interface CredentialRepository {
 
-    ControlledResource ensure(CredentialManager.ResourceType resourceType, String identifier);
+    ControlledResource ensure(ControlledResourceType resourceType, String identifier);
 
     boolean validateStructureOfPassword(String password);
 
     Optional<ControlledResource> lookupByApplicationKeyCode(
-            ImmutableBiMap<CredentialManager.ResourceType, CredentialManager.KeyUsage> keyUsages,
+            ImmutableBiMap<ControlledResourceType, CredentialManager.KeyUsage> keyUsages,
             byte[] code
     );
 }

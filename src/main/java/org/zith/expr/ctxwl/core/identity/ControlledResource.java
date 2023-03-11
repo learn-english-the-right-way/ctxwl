@@ -3,9 +3,11 @@ package org.zith.expr.ctxwl.core.identity;
 import java.util.Optional;
 
 public interface ControlledResource {
-    CredentialManager.ResourceType getType();
+    ControlledResourceType getType();
 
     String getIdentifier();
+
+    ControlledResourceUniversalIdentifier getUniversalIdentifier();
 
     boolean validatePassword(CredentialManager.KeyUsage keyUsage, String password);
 
@@ -23,4 +25,5 @@ public interface ControlledResource {
             CredentialManager.KeyUsage targetKeyUsage,
             boolean migrate
     );
+
 }

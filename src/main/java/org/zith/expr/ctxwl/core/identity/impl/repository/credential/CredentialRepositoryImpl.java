@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableBiMap;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.CredentialRepository;
 import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
@@ -26,7 +27,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
     }
 
     @Override
-    public ControlledResource ensure(CredentialManager.ResourceType resourceType, String identifier) {
+    public ControlledResource ensure(ControlledResourceType resourceType, String identifier) {
         return session
                 .byNaturalId(ResourceEntity.class)
                 .using("name", makeName(resourceType, identifier))
@@ -44,7 +45,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
 
     @Override
     public Optional<ControlledResource> lookupByApplicationKeyCode(
-            ImmutableBiMap<CredentialManager.ResourceType, CredentialManager.KeyUsage> keyUsages,
+            ImmutableBiMap<ControlledResourceType, CredentialManager.KeyUsage> keyUsages,
             byte[] code
     ) {
         var cb = session.getCriteriaBuilder();
@@ -79,7 +80,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
         return credentialSchema.makeEntropicCode(size);
     }
 
-    String makeName(CredentialManager.ResourceType resourceType, String identifier) {
+    String makeName(ControlledResourceType resourceType, String identifier) {
         return credentialSchema.makeName(resourceType, identifier);
     }
 
@@ -91,7 +92,7 @@ public class CredentialRepositoryImpl implements CredentialRepository {
         return credentialSchema.keyUsageName(keyUsage);
     }
 
-    String typeName(CredentialManager.ResourceType resourceType) {
+    String typeName(ControlledResourceType resourceType) {
         return credentialSchema.typeName(resourceType);
     }
 }

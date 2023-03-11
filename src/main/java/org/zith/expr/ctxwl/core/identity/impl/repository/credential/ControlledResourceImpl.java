@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceUniversalIdentifier;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 
 import java.nio.charset.StandardCharsets;
@@ -19,7 +21,7 @@ public class ControlledResourceImpl implements ManagedControlledResource {
         this.entity = entity;
     }
 
-    private void initialize(CredentialManager.ResourceType resourceType, String identifier) {
+    private void initialize(ControlledResourceType resourceType, String identifier) {
         entity.setName(repository.makeName(resourceType, identifier));
         entity.setType(repository.typeName(resourceType));
         entity.setIdentifier(identifier);
@@ -30,8 +32,8 @@ public class ControlledResourceImpl implements ManagedControlledResource {
     }
 
     @Override
-    public CredentialManager.ResourceType getType() {
-        return Arrays.stream(CredentialManager.ResourceType.values())
+    public ControlledResourceType getType() {
+        return Arrays.stream(ControlledResourceType.values())
                 .filter(t -> Objects.equals(repository.typeName(t), entity.getType()))
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + entity.getType()));
@@ -40,6 +42,11 @@ public class ControlledResourceImpl implements ManagedControlledResource {
     @Override
     public String getIdentifier() {
         return entity.getIdentifier();
+    }
+
+    @Override
+    public ControlledResourceUniversalIdentifier getUniversalIdentifier() {
+        return new ControlledResourceUniversalIdentifier(getType(), getIdentifier());
     }
 
     @Override
@@ -302,7 +309,7 @@ public class ControlledResourceImpl implements ManagedControlledResource {
 
     public static ControlledResourceImpl create(
             CredentialRepositoryImpl repository,
-            CredentialManager.ResourceType resourceType,
+            ControlledResourceType resourceType,
             String identifier
     ) {
         var controlledResource = new ResourceEntity().getDelegate().bind(repository);

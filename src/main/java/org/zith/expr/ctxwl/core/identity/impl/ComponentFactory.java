@@ -14,6 +14,7 @@ import org.zith.expr.ctxwl.core.identity.impl.repository.user.UserRepositoryImpl
 import org.zith.expr.ctxwl.core.identity.impl.service.credentialschema.CredentialSchema;
 import org.zith.expr.ctxwl.core.identity.impl.service.mail.MailService;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Random;
 
@@ -39,7 +40,7 @@ public interface ComponentFactory {
     @NotNull
     default IdentityServiceImpl createIdentityServiceImpl(
             Clock clock,
-            Random random,
+            SecureRandom secureRandom,
             boolean reinitializeData,
             PostgreSqlConfiguration postgreSqlConfiguration,
             MailConfiguration mailConfiguration
@@ -47,7 +48,7 @@ public interface ComponentFactory {
         return IdentityServiceImpl.create(
                 this,
                 clock,
-                random,
+                secureRandom,
                 reinitializeData,
                 postgreSqlConfiguration,
                 mailConfiguration

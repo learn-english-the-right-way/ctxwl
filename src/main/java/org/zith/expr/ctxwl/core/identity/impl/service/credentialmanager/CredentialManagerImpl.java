@@ -2,6 +2,7 @@ package org.zith.expr.ctxwl.core.identity.impl.service.credentialmanager;
 
 import com.google.common.collect.ImmutableBiMap;
 import org.zith.expr.ctxwl.core.identity.ControlledResource;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.core.identity.impl.IdentityServiceSessionFactoryImpl;
@@ -26,7 +27,7 @@ public class CredentialManagerImpl implements CredentialManager {
 
     @Override
     public Optional<ControlledResource> verifyApplicationKeyAndGetResource(
-            ImmutableBiMap<ResourceType, KeyUsage> keyUsagesByResourceTypes,
+            ImmutableBiMap<ControlledResourceType, KeyUsage> keyUsagesByResourceTypes,
             String applicationKey
     ) {
         return credentialSchema.validateApplicationKey(keyUsagesByResourceTypes.values(), applicationKey)

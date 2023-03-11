@@ -5,17 +5,15 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jetbrains.annotations.NotNull;
-import org.zith.expr.ctxwl.core.accesscontrol.ActiveResourceRole;
-import org.zith.expr.ctxwl.core.accesscontrol.ApplicationKeyRole;
 import org.zith.expr.ctxwl.core.accesscontrol.Principal;
-import org.zith.expr.ctxwl.core.identity.CredentialManager;
+import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -36,14 +34,14 @@ public class ReadingSessionWebCollection {
 
     @POST
     public ReadingSessionWebDocument create(ReadingSessionWebDocument document) throws Exception {
-        var optionalApplicationKey = CtxwlKeyPrincipal.resolveDelegate(securityContext.getUserPrincipal()).stream()
-                .map(Principal::roles)
-                .flatMap(List::stream)
-                .filter(ActiveResourceRole.match(CredentialManager.ResourceType.USER))
-                .map(ActiveResourceRole.class::cast)
-                .findFirst()
-                .flatMap(ActiveResourceRole::optionalApplicationKeyRole)
-                .map(ApplicationKeyRole::applicationKey);
+        var optionalApplicationKey =
+                Stream.of(securityContext.getUserPrincipal())
+                        .filter(CtxwlKeyPrincipal.class::isInstance)
+                        .map(CtxwlKeyPrincipal.class::cast)
+                        .flatMap(p -> p.getCompositingPrincipal(ControlledResourceType.USER).stream())
+                        .map(Principal::applicationKeys)
+                        .flatMap(Collection::stream)
+                        .findFirst();
 
         if (optionalApplicationKey.isEmpty()) {
             throw new ForbiddenException();

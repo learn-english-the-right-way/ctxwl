@@ -19,7 +19,6 @@ public class ResourceApplicationKeyCodeEntity {
         this.id = id;
     }
 
-    @NaturalId
     @Column(unique = true)
     public byte[] getCode() {
         return code;

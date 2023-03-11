@@ -5,6 +5,7 @@ import org.zith.expr.ctxwl.core.identity.config.MailConfiguration;
 import org.zith.expr.ctxwl.core.identity.impl.ComponentFactory;
 import org.zith.expr.ctxwl.core.identity.impl.DefaultComponentFactory;
 
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Random;
 
@@ -25,7 +26,7 @@ public final class IdentityServiceCreator {
     ) {
         return componentFactory.createIdentityServiceImpl(
                 Clock.systemDefaultZone(),
-                new Random(),
+                new SecureRandom(),
                 reinitializeData,
                 postgreSqlConfiguration,
                 mailConfiguration

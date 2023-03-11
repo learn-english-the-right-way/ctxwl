@@ -2,12 +2,11 @@ package org.zith.expr.ctxwl.core.identity.functest;
 
 import org.junit.jupiter.api.Test;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
-import org.zith.expr.ctxwl.core.accesscontrol.ActiveResourceRole;
+import org.zith.expr.ctxwl.webapi.authorization.role.EmailRegistrantRole;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EmailRegistrationRepositoryFunctionalTests extends AbstractIdentityServiceFunctionalTests {
     @Test
@@ -33,19 +32,16 @@ public class EmailRegistrationRepositoryFunctionalTests extends AbstractIdentity
             assertTrue(optionalAuthenticationKey.isPresent());
             authenticationKey = optionalAuthenticationKey.get();
         }
-        var optionalPrincipal = realm().authenticate(List.of(authenticationKey));
-        assertTrue(optionalPrincipal.isPresent());
-        var principal = optionalPrincipal.get();
-        assertTrue(principal.roles().stream()
-                .anyMatch(ActiveResourceRole.match(CredentialManager.ResourceType.EMAIL_REGISTRATION)));
+        var principals = realm().authenticate(List.of(authenticationKey));
+        assertFalse(principals.isEmpty());
+        var principal = principals.get(0);
 
         try (var session = identityService().openSession()) {
             var emailRegistrations =
                     session.emailRegistrationRepository().list(address);
             assertEquals(1, emailRegistrations.size());
             var emailRegistration = emailRegistrations.get(0);
-            assertTrue(principal.roles().stream()
-                    .anyMatch(ActiveResourceRole.match(CredentialManager.ResourceType.EMAIL_REGISTRATION)));
+            accessPolicy().isPrincipalInRole(principal, new EmailRegistrantRole(emailRegistration.getControlledResource().getIdentifier()));
         }
     }
 }
