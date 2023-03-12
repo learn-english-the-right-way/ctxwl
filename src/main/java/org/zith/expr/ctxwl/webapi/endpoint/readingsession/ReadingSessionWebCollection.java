@@ -10,7 +10,7 @@ import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
+import org.zith.expr.ctxwl.webapi.authentication.CtxwlPrincipal;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -36,8 +36,8 @@ public class ReadingSessionWebCollection {
     public ReadingSessionWebDocument create(ReadingSessionWebDocument document) throws Exception {
         var optionalApplicationKey =
                 Stream.of(securityContext.getUserPrincipal())
-                        .filter(CtxwlKeyPrincipal.class::isInstance)
-                        .map(CtxwlKeyPrincipal.class::cast)
+                        .filter(CtxwlPrincipal.class::isInstance)
+                        .map(CtxwlPrincipal.class::cast)
                         .flatMap(p -> p.getCompositingPrincipal(ControlledResourceType.USER).stream())
                         .map(Principal::applicationKeys)
                         .flatMap(Collection::stream)

@@ -5,7 +5,7 @@ import org.zith.expr.ctxwl.core.accesscontrol.Principal;
 import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.core.reading.ReadingSession;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeyPrincipal;
+import org.zith.expr.ctxwl.webapi.authentication.CtxwlPrincipal;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -25,8 +25,8 @@ public class ReadingSessionResolver {
 
         var optionalApplicationKey =
                 Stream.of(securityContext.getUserPrincipal())
-                        .filter(CtxwlKeyPrincipal.class::isInstance)
-                        .map(CtxwlKeyPrincipal.class::cast)
+                        .filter(CtxwlPrincipal.class::isInstance)
+                        .map(CtxwlPrincipal.class::cast)
                         .flatMap(p -> p.getCompositingPrincipal(ControlledResourceType.USER).stream())
                         .map(Principal::applicationKeys)
                         .flatMap(Collection::stream)

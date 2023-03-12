@@ -37,7 +37,7 @@ public class CtxwlKeyAuthenticationFilter implements ContainerRequestFilter {
             throw new CtxwlKeyAuthenticationException();
         } else {
             requestContext.setSecurityContext(
-                    CtxwlKeySecurityContext.create(requestContext.getSecurityContext(), policy, principals));
+                    CtxwlSecurityContext.create(requestContext.getSecurityContext(), policy, principals));
         }
     }
 }

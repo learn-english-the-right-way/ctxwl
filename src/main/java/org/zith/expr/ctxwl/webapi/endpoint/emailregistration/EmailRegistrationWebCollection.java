@@ -4,13 +4,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
-import org.jetbrains.annotations.NotNull;
+import org.zith.expr.ctxwl.core.accesscontrol.AccessPolicy;
 import org.zith.expr.ctxwl.core.identity.CredentialManager;
 import org.zith.expr.ctxwl.core.identity.Email;
-import org.zith.expr.ctxwl.core.identity.EmailRegistration;
 import org.zith.expr.ctxwl.core.identity.IdentityServiceSessionFactory;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
-import org.zith.expr.ctxwl.webapi.authentication.CtxwlKeySecurityContext;
+import org.zith.expr.ctxwl.webapi.authentication.CtxwlPrincipal;
 import org.zith.expr.ctxwl.webapi.authorization.role.EmailRegistrantRole;
 
 import java.util.Objects;
@@ -22,14 +21,17 @@ import java.util.Optional;
 public class EmailRegistrationWebCollection {
 
     private final IdentityServiceSessionFactory identityServiceSessionFactory;
+    private final AccessPolicy accessPolicy;
     private final SecurityContext securityContext;
 
     @Inject
     public EmailRegistrationWebCollection(
             IdentityServiceSessionFactory identityServiceSessionFactory,
+            AccessPolicy accessPolicy,
             SecurityContext securityContext
     ) {
         this.identityServiceSessionFactory = identityServiceSessionFactory;
+        this.accessPolicy = accessPolicy;
         this.securityContext = securityContext;
     }
 
@@ -81,15 +83,16 @@ public class EmailRegistrationWebCollection {
                     throw new EmailRegistrationException.UnauthorizedEmailAddressException();
                 }
 
+                var principals = CtxwlPrincipal.decompose(securityContext.getUserPrincipal());
+
                 var authorizedEmailRegistrations =
-                        Optional.of(securityContext)
-                                .filter(CtxwlKeySecurityContext.class::isInstance)
-                                .map(CtxwlKeySecurityContext.class::cast)
-                                .flatMap(securityContext -> emailRegistrations.stream()
-                                        .filter(emailRegistration ->
-                                                securityContext.isUserInRole(emailRegistrantRole(emailRegistration)))
-                                        .findAny()
-                                );
+                        emailRegistrations.stream()
+                                .filter(emailRegistration -> {
+                                    var role = new EmailRegistrantRole(
+                                            emailRegistration.getControlledResource().getIdentifier());
+                                    return principals.stream().anyMatch(p -> accessPolicy.isPrincipalInRole(p, role));
+                                })
+                                .findAny();
 
                 if (authorizedEmailRegistrations.isEmpty()) {
                     throw new EmailRegistrationException.UnauthorizedEmailAddressException();
@@ -130,8 +133,4 @@ public class EmailRegistrationWebCollection {
         }
     }
 
-    @NotNull
-    private static EmailRegistrantRole emailRegistrantRole(EmailRegistration emailRegistration) {
-        return new EmailRegistrantRole(emailRegistration.getControlledResource().getIdentifier());
-    }
 }
