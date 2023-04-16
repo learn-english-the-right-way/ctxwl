@@ -2,22 +2,22 @@ core:
   identity:
     reinitializeData: false
     postgreSql:
-      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
-      username: "USER_NAME"
-      password: "PASSWORD"
+      uri: "jdbc:postgresql://localhost:5432/ctxwl"
+      username: "ctxwl"
+      password: "ctxwl"
     mail:
-      host: HOST
-      address: "USER@DOMAIN.COM"
+      host: smtp-mail.outlook.com
+      address: "vones3@outlook.com"
       port: 587
       method: plain
       plainAuthentication:
-        username: USER_NAME
-        password: PASSWORD
+        username: vones3@outlook.com
+        password: nussyD-zixmup-vaxva7
   reading:
     reinitializeData: false
     postgreSql:
-      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
-      username: "USER_NAME"
-      password: "PASSWORD"
+      uri: "jdbc:postgresql://localhost:5432/ctxwl"
+      username: "ctxwl"
+      password: "ctxwl"
     mongoDb:
-      uri: "mongodb://HOST/DB_NAME"
+      uri: "mongodb://localhost:27017/ctxwl"

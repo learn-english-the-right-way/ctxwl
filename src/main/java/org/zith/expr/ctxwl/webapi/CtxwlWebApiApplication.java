@@ -22,6 +22,7 @@ import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationExceptio
 import org.zith.expr.ctxwl.webapi.endpoint.authentication.AuthenticationWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.emailregistration.EmailRegistrationWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.paragraphgenerator.ParagraphGeneratorWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry.ReadingHistoryEntryWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readinghistoryentry.ReadingHistoryExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup.ReadingInspiredLookupExceptionModule;
@@ -50,6 +51,8 @@ public class CtxwlWebApiApplication extends ResourceConfig {
         register(ReadingHistoryEntryWebCollection.class);
         register(ReadingInspiredLookupWebCollection.class);
         register(ReadingSessionWebCollection.class);
+
+        register(ParagraphGeneratorWebCollection.class);
 
         var injector = Guice.createInjector(
                 new WebApiExceptionModule(),
