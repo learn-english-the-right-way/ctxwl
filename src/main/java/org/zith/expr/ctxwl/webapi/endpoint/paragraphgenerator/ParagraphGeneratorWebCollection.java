@@ -10,6 +10,7 @@ import jakarta.ws.rs.client.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.zith.expr.ctxwl.app.config.core.paragraphgenerator.AppCoreParagraphGeneratorConfiguration;
 import org.zith.expr.ctxwl.common.async.Tracked;
 import org.zith.expr.ctxwl.core.identity.ControlledResourceType;
 import org.zith.expr.ctxwl.core.reading.ReadingEvent;
@@ -56,10 +57,13 @@ public class ParagraphGeneratorWebCollection {
 
     private final SecurityContext securityContext;
 
+    private final AppCoreParagraphGeneratorConfiguration config;
+
     @Inject
-    public ParagraphGeneratorWebCollection(ReadingService readingService, SecurityContext securityContext) {
+    public ParagraphGeneratorWebCollection(ReadingService readingService, SecurityContext securityContext, AppCoreParagraphGeneratorConfiguration config) {
         this.readingService = readingService;
         this.securityContext = securityContext;
+        this.config = config;
     }
 
     @GET
@@ -123,16 +127,16 @@ public class ParagraphGeneratorWebCollection {
             String randomWord = words.get(random.nextInt(words.size()));
 
             Client client = ClientBuilder.newClient();
-            WebTarget completionService = client.target("https://api.openai.com/v1/chat/completions");
+            WebTarget completionService = client.target(config.openAI().url());
 
             var request = new OpenAICompletionRequest(
                     "gpt-3.5-turbo",
-                    List.of(new OpenAICompletionRequest.OpenAICompletionRequestMessage("user", "Give me an interesting short story which is less than 100 words based on the word:" + randomWord))
+                    List.of(new OpenAICompletionRequest.OpenAICompletionRequestMessage("user", "Give me an interesting short story in simple language which is less than 150 words based on the word:" + randomWord))
             );
 
             Entity<OpenAICompletionRequest> entity = Entity.entity(request, MediaType.APPLICATION_JSON);
             Invocation.Builder builder = completionService.request(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer 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");
+                    .header("Authorization", "Bearer " + config.openAI().apiKey());
 
             CompletableFuture<OpenAICompletionResponse> future = CompletableFuture.supplyAsync(() -> {
                 Response response = builder.post(entity);

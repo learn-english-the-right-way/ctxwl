@@ -2,22 +2,26 @@ core:
   identity:
     reinitializeData: false
     postgreSql:
-      uri: "jdbc:postgresql://localhost:5432/ctxwl"
-      username: "ctxwl"
-      password: "ctxwl"
+      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
+      username: "USER_NAME"
+      password: "PASSWORD"
     mail:
-      host: smtp-mail.outlook.com
-      address: "vones3@outlook.com"
+      host: HOST
+      address: "USER@DOMAIN.COM"
       port: 587
       method: plain
       plainAuthentication:
-        username: vones3@outlook.com
-        password: nussyD-zixmup-vaxva7
+        username: USER_NAME
+        password: PASSWORD
   reading:
     reinitializeData: false
     postgreSql:
-      uri: "jdbc:postgresql://localhost:5432/ctxwl"
-      username: "ctxwl"
-      password: "ctxwl"
+      uri: "jdbc:postgresql://HOST:5432/DB_NAME"
+      username: "USER_NAME"
+      password: "PASSWORD"
     mongoDb:
-      uri: "mongodb://localhost:27017/ctxwl"
+      uri: "mongodb://HOST/DB_NAME"
+  paragraphGenerator:
+    openAI:
+      url: "https://api.openai.com/v1/chat/completions"
+      apiKey: "sk-xxxxxxxx"

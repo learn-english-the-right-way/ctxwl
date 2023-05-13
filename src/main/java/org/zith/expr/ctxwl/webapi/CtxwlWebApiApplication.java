@@ -6,6 +6,7 @@ import com.google.inject.TypeLiteral;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.zith.expr.ctxwl.app.config.core.paragraphgenerator.AppCoreParagraphGeneratorConfiguration;
 import org.zith.expr.ctxwl.core.accesscontrol.AccessPolicy;
 import org.zith.expr.ctxwl.core.accesscontrol.Realm;
 import org.zith.expr.ctxwl.core.identity.IdentityService;
@@ -35,9 +36,12 @@ public class CtxwlWebApiApplication extends ResourceConfig {
     private final IdentityService identityService;
     private final ReadingService readingService;
 
-    public CtxwlWebApiApplication(IdentityService identityService, ReadingService readingService) {
+    private final AppCoreParagraphGeneratorConfiguration paragraphGeneratorConfig;
+
+    public CtxwlWebApiApplication(IdentityService identityService, ReadingService readingService, AppCoreParagraphGeneratorConfiguration paragraphGeneratorConfig) {
         this.identityService = identityService;
         this.readingService = readingService;
+        this.paragraphGeneratorConfig = paragraphGeneratorConfig;
 
         register(new RepositoryBinder());
 
@@ -74,6 +78,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
         protected void configure() {
             bind(identityService).to(IdentityService.class).to(IdentityServiceSessionFactory.class);
             bind(readingService).to(ReadingService.class);
+            bind(paragraphGeneratorConfig).to(AppCoreParagraphGeneratorConfiguration.class);
             bindFactory(RealmFactory.class).to(Realm.class);
             bindFactory(AccessPolicyFactory.class).to(AccessPolicy.class);
         }
