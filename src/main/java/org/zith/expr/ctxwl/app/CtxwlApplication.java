@@ -96,9 +96,11 @@ public class CtxwlApplication {
                             configuration.core().reading().postgreSql().effectiveConfiguration(),
                             configuration.core().reading().mongoDb().effectiveConfiguration()));
 
+            var paragraphGeneratorConfig = configuration.core().paragraphGenerator();
+
             server = JettyHttpContainerFactory.createServer(
                     URI.create(configuration.webApi().effectiveBaseUri()),
-                    new CtxwlWebApiApplication(identityService, readingService));
+                    new CtxwlWebApiApplication(identityService, readingService, paragraphGeneratorConfig));
             server.start();
             var asynchronousClosable = new AtomicReference<CombinedAutoCloseable>();
             var termination = new CompletableFuture<Void>();

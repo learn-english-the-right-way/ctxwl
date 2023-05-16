@@ -21,3 +21,7 @@ core:
       password: "PASSWORD"
     mongoDb:
       uri: "mongodb://HOST/DB_NAME"
+  paragraphGenerator:
+    openAI:
+      url: "https://api.openai.com/v1/chat/completions"
+      apiKey: "sk-xxxxxxxx"
