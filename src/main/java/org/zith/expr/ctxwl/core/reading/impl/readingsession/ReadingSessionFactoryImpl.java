@@ -65,6 +65,7 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
     @Override
     public @NotNull ReadingSessionImpl makeSession(String group, String wordlist) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(group));
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(wordlist));
         var readingSessionEntity = withTransaction(session -> {
             var cb = session.getCriteriaBuilder();
             var q = cb.createQuery(ReadingSessionEntity.class);
@@ -93,6 +94,7 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
 
             var entity = optionalEntity.get();
             entity.setStatus(ReadingSessionImpl.Status.ACTIVE.getCode());
+            entity.setWordlist(wordlist);
             entity.setCreationTime(clock.instant().truncatedTo(ChronoUnit.MICROS));
             session.persist(entity);
 
