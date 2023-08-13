@@ -3,50 +3,46 @@ package org.zith.expr.ctxwl.common.async;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
-    private final Strand strand;
     private final Function<T, R> mapper;
     private final State state;
 
-    public UnbufferedProcessor(Executor executor, Function<T, R> mapper) {
-        this.strand = new Strand(Objects.requireNonNull(executor));
+    public UnbufferedProcessor(Function<T, R> mapper) {
         this.mapper = Objects.requireNonNull(mapper);
         this.state = new State();
     }
 
     @Override
     public void subscribe(Flow.Subscriber<? super R> subscriber) {
-        Exception failed = null;
+        Exception subscriptionFailure = null;
         Flow.Subscription deferredSubscription;
-        Throwable pendingError;
-        boolean pendingCompletion;
+        Throwable error;
+        boolean completed;
         synchronized (state) {
             if (state.downstream != null) {
-                failed = new IllegalStateException("This publisher has already been subscribed");
+                subscriptionFailure = new IllegalStateException("This publisher has already been subscribed");
             }
             state.downstream = subscriber;
             deferredSubscription = state.deferredSubscription;
-            pendingError = state.pendingError;
-            pendingCompletion = state.pendingCompletion;
+            error = state.error;
+            completed = state.completed;
             state.deferredSubscription = null;
-            state.pendingError = null;
-            state.pendingCompletion = false;
+            state.error = null;
+            state.completed = false;
         }
 
-        if (failed != null) {
-            Exception failure = failed;
-            strand.execute(() -> subscriber.onError(failure));
+        if (subscriptionFailure != null) {
+            subscriber.onError(subscriptionFailure);
             return;
         }
 
-        if (pendingError != null) {
-            passError(subscriber, pendingError);
+        if (error != null) {
+            passError(subscriber, error);
         } else {
-            if (pendingCompletion) {
+            if (completed) {
                 passSubscription(subscriber, NoopSubscription.getInstance());
                 passCompletion(subscriber);
             } else if (deferredSubscription != null) {
@@ -62,7 +58,7 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
             synchronized (state) {
                 downstream = state.downstream;
                 if (downstream == null) {
-                    if (state.pendingError == null && !state.pendingCompletion) {
+                    if (state.error == null && !state.completed) {
                         state.deferredSubscription = subscription;
                     }
                 }
@@ -80,7 +76,7 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
         if (downstream == null) {
             return;
         }
-        strand.execute(() -> downstream.onNext(mapper.apply(item)));
+        downstream.onNext(mapper.apply(item));
     }
 
     @Override
@@ -91,8 +87,8 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
                 downstream = state.downstream;
                 if (downstream == null) {
                     state.deferredSubscription = null;
-                    state.pendingError = throwable;
-                    state.pendingCompletion = false;
+                    state.error = throwable;
+                    state.completed = false;
                     return;
                 }
             }
@@ -107,9 +103,9 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
             synchronized (state) {
                 downstream = state.downstream;
                 if (downstream == null) {
-                    if (state.pendingError == null) {
+                    if (state.error == null) {
                         state.deferredSubscription = null;
-                        state.pendingCompletion = true;
+                        state.completed = true;
                     }
                     return;
                 }
@@ -122,7 +118,7 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
             @NotNull Flow.Subscriber<? super R> downstream,
             @NotNull Flow.Subscription subscription
     ) {
-        strand.execute(() -> downstream.onSubscribe(new Flow.Subscription() {
+        downstream.onSubscribe(new Flow.Subscription() {
             @Override
             public void request(long n) {
                 subscription.request(n);
@@ -132,26 +128,26 @@ public final class UnbufferedProcessor<T, R> implements Flow.Processor<T, R> {
             public void cancel() {
                 subscription.cancel();
             }
-        }));
+        });
     }
 
     private void passError(
             @NotNull Flow.Subscriber<? super R> downstream,
             @NotNull Throwable throwable
     ) {
-        strand.execute(() -> downstream.onError(throwable));
+        downstream.onError(throwable);
     }
 
     private void passCompletion(
             @NotNull Flow.Subscriber<? super R> downstream
     ) {
-        strand.execute(downstream::onComplete);
+        downstream.onComplete();
     }
 
     private class State {
         volatile Flow.Subscriber<? super R> downstream;
         Flow.Subscription deferredSubscription;
-        Throwable pendingError;
-        boolean pendingCompletion;
+        Throwable error;
+        boolean completed;
     }
 }

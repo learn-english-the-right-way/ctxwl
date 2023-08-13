@@ -72,17 +72,22 @@ public class ReadingInspiredLookupRepositoryImpl implements ReadingInspiredLooku
         var acknowledgements = new ConcurrentLinkedQueue<ReadingInspiredLookupDocument.Id>();
 
         class Shipper {
+            private final Strand strand;
             private final Flow.Subscriber<? super Tracked<BoundReadingInspiredLookup<Session>>> subscriber;
             private MongoCursor<ReadingInspiredLookupDocument> iterator;
             private boolean cancelled;
 
-            public Shipper(Flow.Subscriber<? super Tracked<BoundReadingInspiredLookup<Session>>> subscriber) {
+            public Shipper(
+                    Strand strand,
+                    Flow.Subscriber<? super Tracked<BoundReadingInspiredLookup<Session>>> subscriber
+            ) {
+                this.strand = strand;
                 this.subscriber = subscriber;
                 this.iterator = null;
                 this.cancelled = false;
             }
 
-            private synchronized void ship() {
+            private void ship() {
                 if (cancelled) return;
 
                 if (iterator == null) iterator = documents.iterator();
@@ -113,11 +118,11 @@ public class ReadingInspiredLookupRepositoryImpl implements ReadingInspiredLooku
                 }
                 subscriber.onNext(Tracked.of(lookup, () -> {
                     acknowledgements.add(id);
-                    executor.execute(Shipper.this::processAcknowledgements);
+                    strand.execute(Shipper.this::processAcknowledgements);
                 }));
             }
 
-            public synchronized void cancel() {
+            public void cancel() {
                 if (iterator == null) return;
                 iterator.close();
                 cancelled = true;
@@ -152,8 +157,8 @@ public class ReadingInspiredLookupRepositoryImpl implements ReadingInspiredLooku
 
         return subscriber -> {
             AtomicBoolean cancelled = new AtomicBoolean(false);
-            Shipper shipper = new Shipper(subscriber);
             Strand strand = new Strand(executor);
+            Shipper shipper = new Shipper(strand, subscriber);
 
             var subscription = new Flow.Subscription() {
                 @Override

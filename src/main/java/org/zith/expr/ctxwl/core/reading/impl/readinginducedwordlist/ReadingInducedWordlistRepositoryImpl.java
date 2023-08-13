@@ -10,10 +10,7 @@ import org.zith.expr.ctxwl.core.reading.ReadingEvent;
 import org.zith.expr.ctxwl.core.reading.ReadingInducedWordlist;
 import org.zith.expr.ctxwl.core.reading.ReadingInspiredLookupValueLike;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,26 +50,34 @@ public class ReadingInducedWordlistRepositoryImpl implements ReadingInducedWordl
                         l -> l.session().getWordlist(),
                         Collectors.mapping(ReadingInspiredLookupValueLike::criterion, Collectors.toSet())));
         var baseFormCache = new HashMap<String, List<String>>();
+        record WordInfo(String word, boolean canonical) {
+        }
         var wordsByWordlistIds = lemmasByWordlistIds.entrySet().stream()
                 .map(e -> Map.entry(e.getKey(),
                         e.getValue().stream()
                                 .map(lemma ->
-                                        baseFormCache.computeIfAbsent(lemma, word ->
-                                                wordNet.getBaseForms(word).stream()
-                                                        .map(WordAsPartOfSpeech::word).distinct().toList()))
+                                        Optional.of(baseFormCache.computeIfAbsent(lemma, word ->
+                                                        // TODO WordNet doesn't include prepositions, pronoun,
+                                                        //  conjunctions, interjections.
+                                                        wordNet.getBaseForms(word).stream()
+                                                                .map(WordAsPartOfSpeech::word).distinct().toList()))
+                                                .filter(ws -> !ws.isEmpty())
+                                                .map(ws -> ws.stream().map(w -> new WordInfo(w, true)).toList())
+                                                .orElseGet(() -> List.of(new WordInfo(lemma, false))))
                                 .flatMap(Collection::stream)
                                 .toList()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         withTransaction(session -> {
             for (var entry : wordsByWordlistIds.entrySet()) {
                 var wordlistId = entry.getKey();
-                for (var word : entry.getValue()) {
+                for (var wordInfo : entry.getValue()) {
                     var entity = session.byId(ReadingInducedWordlistEntryEntity.class)
-                            .loadOptional(new ReadingInducedWordlistEntryEntity.Key(wordlistId, word))
+                            .loadOptional(new ReadingInducedWordlistEntryEntity.Key(wordlistId, wordInfo.word()))
                             .orElseGet(() -> {
                                 var freshEntity = new ReadingInducedWordlistEntryEntity();
                                 freshEntity.setWordlistId(wordlistId);
-                                freshEntity.setWord(word);
+                                freshEntity.setWord(wordInfo.word());
+                                freshEntity.setCanonical(wordInfo.canonical());
                                 return freshEntity;
                             });
                     session.persist(entity);

@@ -12,6 +12,7 @@ import java.util.Objects;
 public class ReadingInducedWordlistEntryEntity {
     private String wordlistId;
     private String word;
+    private Boolean canonical;
 
     @Id
     public String getWordlistId() {
@@ -29,6 +30,14 @@ public class ReadingInducedWordlistEntryEntity {
 
     public void setWord(String word) {
         this.word = word;
+    }
+
+    public void setCanonical(Boolean canonical) {
+        this.canonical = canonical;
+    }
+
+    public Boolean isCanonical() {
+        return canonical;
     }
 
     public static class Key implements Serializable {
