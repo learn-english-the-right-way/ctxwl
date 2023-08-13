@@ -30,6 +30,7 @@ import org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup.ReadingInspired
 import org.zith.expr.ctxwl.webapi.endpoint.readinginspiredlookup.ReadingInspiredLookupWebCollection;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionExceptionModule;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionWebCollection;
+import org.zith.expr.ctxwl.webapi.endpoint.wordlist.WordlistWebCollection;
 import org.zith.expr.ctxwl.webapi.mapper.ObjectMapperProvider;
 
 public class CtxwlWebApiApplication extends ResourceConfig {
@@ -57,6 +58,7 @@ public class CtxwlWebApiApplication extends ResourceConfig {
         register(ReadingSessionWebCollection.class);
 
         register(ParagraphGeneratorWebCollection.class);
+        register(WordlistWebCollection.class);
 
         var injector = Guice.createInjector(
                 new WebApiExceptionModule(),

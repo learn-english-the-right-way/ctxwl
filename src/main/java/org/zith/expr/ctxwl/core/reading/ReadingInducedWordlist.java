@@ -6,4 +6,6 @@ public interface ReadingInducedWordlist {
     String id();
 
     List<String> getWords();
+
+    void delete(String word);
 }

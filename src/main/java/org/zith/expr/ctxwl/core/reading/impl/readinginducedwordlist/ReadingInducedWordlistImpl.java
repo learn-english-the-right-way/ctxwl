@@ -29,4 +29,15 @@ public class ReadingInducedWordlistImpl implements ReadingInducedWordlist {
             return session.createQuery(q).list().stream().map(ReadingInducedWordlistEntryEntity::getWord).toList();
         });
     }
+
+    @Override
+    public void delete(String word) {
+        parent.withTransaction(session -> {
+            ReadingInducedWordlistEntryEntity wordlistEntry = session.get(ReadingInducedWordlistEntryEntity.class, new ReadingInducedWordlistEntryEntity.Key(id, word));
+            if (wordlistEntry != null) {
+                session.remove(wordlistEntry);
+            }
+            return null;
+        });
+    }
 }
