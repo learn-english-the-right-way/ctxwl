@@ -137,7 +137,7 @@ public class ReadingSessionFactoryImpl implements ReadingSessionFactory {
                         "Dangling session reference %s %d".formatted(group, serial))));
         var processor =
                 new UnbufferedProcessor<Tracked<BoundReadingInspiredLookup<ReadingSession>>, Tracked<ReadingEvent>>(
-                        executor, item -> item.map(ReadingEvents.AddingReadingInspiredLookup::new));
+                        item -> item.map(ReadingEvents.AddingReadingInspiredLookup::new));
         upstream.subscribe(processor);
         return processor;
     }
