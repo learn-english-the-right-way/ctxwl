@@ -80,15 +80,17 @@ public class WordlistWebCollection {
 
         readingService.extendWordlist(data);
 
-        var words = readingService.getWordlist(principal.name()).getWords();
+        var entries = readingService.getWordlist(principal.name()).getWords().stream()
+                .map(WordlistWebDocument.Entry::new)
+                .toList();
 
-        return new WordlistWebDocument(words);
+        return new WordlistWebDocument(entries);
     }
 
     @PUT
     public WordlistWebDocument update(WordlistWebDocument document) throws Exception {
         // get request wordlist
-        var proposedWordlist = new HashSet<>(document.words());
+        var proposedWordlist = new HashSet<>(document.entries());
 
         // get existing wordlist
         var optionalPrincipal =
@@ -139,17 +141,24 @@ public class WordlistWebCollection {
         readingService.extendWordlist(data);
 
         // get words to delete
-        var wordsToDelete = new HashSet<>(readingService.getWordlist(principal.name()).getWords());
+        var currentWordlist = readingService.getWordlist(principal.name()).getWords().stream()
+                .map(WordlistWebDocument.Entry::new)
+                .toList();
+        var wordsToDelete = new HashSet<>(currentWordlist);
+        // TODO: handle case where proposed wordlist contains word(s) not in current wordlist
         wordsToDelete.removeAll(proposedWordlist);
 
         // delete words from wordlist
         var iterator = wordsToDelete.iterator();
         var wordlist = readingService.getWordlist(principal.name());
         while (iterator.hasNext()) {
-            wordlist.delete(iterator.next());
+            wordlist.delete(iterator.next().word());
         }
 
         // return new wordlist
-        return new WordlistWebDocument(readingService.getWordlist(principal.name()).getWords());
+        var entries = readingService.getWordlist(principal.name()).getWords().stream()
+                .map(WordlistWebDocument.Entry::new)
+                .toList();
+        return new WordlistWebDocument(entries);
     }
 }

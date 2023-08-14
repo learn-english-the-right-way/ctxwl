@@ -32,6 +32,7 @@ public class ReadingInducedWordlistImpl implements ReadingInducedWordlist {
 
     @Override
     public void delete(String word) {
+        // TODO: handle edge case where the word is not in the current wordlist
         parent.withTransaction(session -> {
             ReadingInducedWordlistEntryEntity wordlistEntry = session.get(ReadingInducedWordlistEntryEntity.class, new ReadingInducedWordlistEntryEntity.Key(id, word));
             if (wordlistEntry != null) {
