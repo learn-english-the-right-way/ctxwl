@@ -214,7 +214,7 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
         readingService().extendWordlist(data);
 
         assertEquals(
-                Set.of("better", "well", "good", "quickly", "be"),
+                Set.of("better", "well", "good", "quickly", "be", "for"),
                 new HashSet<>(readingService().getWordlist("wordlist").getWords()));
     }
 }
