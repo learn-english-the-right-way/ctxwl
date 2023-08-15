@@ -81,8 +81,6 @@ public class ParagraphGeneratorWebCollection {
 
         var principal = optionalPrincipal.get();
 
-
-
         var completion = new CompletableFuture<Void>();
         var data = new LinkedList<ReadingEvent>();
         readingService.collect(ForkJoinPool.commonPool()).subscribe(new Flow.Subscriber<>() {
@@ -131,7 +129,7 @@ public class ParagraphGeneratorWebCollection {
 
             var request = new OpenAICompletionRequest(
                     "gpt-3.5-turbo",
-                    List.of(new OpenAICompletionRequest.OpenAICompletionRequestMessage("user", "Give me an interesting short story in simple language which is less than 150 words based on the word:" + randomWord))
+                    List.of(new OpenAICompletionRequest.OpenAICompletionRequestMessage("user", "Give me an interesting short story in simple language which is less than 100 words based on the word:" + randomWord))
             );
 
             Entity<OpenAICompletionRequest> entity = Entity.entity(request, MediaType.APPLICATION_JSON);
