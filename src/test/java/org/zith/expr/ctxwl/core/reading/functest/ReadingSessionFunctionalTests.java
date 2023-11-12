@@ -176,6 +176,15 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
                             Optional.of(Instant.now())
                     )
             );
+            session.createLookup(
+                    0,
+                    4,
+                    new ReadingInspiredLookupValue(
+                            "dazzle",
+                            Optional.of(60L),
+                            Optional.of(Instant.now())
+                    )
+            );
         }
 
 
@@ -214,7 +223,7 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
         readingService().extendWordlist(data);
 
         assertEquals(
-                Set.of("better", "well", "good", "quickly", "be", "for"),
+                Set.of("better", "well", "good", "quickly", "be", "for", "dazzle"),
                 new HashSet<>(readingService().getWordlist("wordlist").getWords()));
     }
 }

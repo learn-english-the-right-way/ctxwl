@@ -4,6 +4,7 @@ import com.google.common.primitives.Bytes;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -34,32 +35,34 @@ class IndexDatabase implements AutoCloseable {
         do {
             current.position(current.remaining() / 2);
             seekBackwardToNewLine(current);
-            var originalStart = current.position();
-            boolean sought = false;
-            while (!sought) {
-                var start = current.position();
-                seekForwardUntilNewLine(current);
-                var end = current.position();
-
-                var line = new byte[end - start];
-                current.position(start).get(line);
-                if (line.length >= 2 && line[0] == ' ' && line[1] == ' ') {
-                    current = current.position(end).slice();
-                    sought = true;
+            var pivot = current.position();
+            boolean narrowed = false;
+            while (!narrowed) {
+                if (!current.hasRemaining()) {
+                    current = current.slice(0, pivot).rewind();
+                    narrowed = true;
                 } else {
-                    var pos = Bytes.indexOf(line, (byte) ' ');
-                    if (pos >= 0) {
-                        var lemma = new byte[pos];
-                        System.arraycopy(line, 0, lemma, 0, pos);
-                        var cmp = compare(target, lemma);
-                        if (cmp < 0) {
-                            current = current.slice(0, originalStart).rewind();
-                            sought = true;
-                        } else if (cmp > 0) {
-                            current = current.position(end).slice();
-                            sought = true;
-                        } else {
-                            return Optional.of(word);
+                    var lineStart = current.position();
+                    seekForwardUntilNewLine(current);
+                    var lineEnd = current.position();
+
+                    var line = new byte[lineEnd - lineStart];
+                    current.position(lineStart).get(line);
+                    if (!(line.length >= 2 && line[0] == ' ' && line[1] == ' ')) {
+                        var pos = Bytes.indexOf(line, (byte) ' ');
+                        if (pos >= 0) {
+                            var lemma = new byte[pos];
+                            System.arraycopy(line, 0, lemma, 0, pos);
+                            var cmp = compare(target, lemma);
+                            if (cmp < 0) {
+                                current = current.slice(0, lineStart).rewind();
+                                narrowed = true;
+                            } else if (cmp > 0) {
+                                current = current.position(lineEnd).slice();
+                                narrowed = true;
+                            } else {
+                                return Optional.of(word);
+                            }
                         }
                     }
                 }
@@ -81,7 +84,7 @@ class IndexDatabase implements AutoCloseable {
         return 0;
     }
 
-    private static void seekBackwardToNewLine(MappedByteBuffer current) {
+    private static void seekBackwardToNewLine(ByteBuffer current) {
         var buffer = new byte[32];
         while (current.position() > 0) {
             int n = Integer.min(current.position(), buffer.length);
