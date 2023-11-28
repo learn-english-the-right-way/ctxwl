@@ -70,8 +70,9 @@ public class ReadingSessionImpl implements ReadingSession {
     }
 
     @Override
-    public ReadingHistoryEntry createHistoryEntry(long serial, ReadingHistoryEntryValue value) {
-        return factory.getReadingHistoryEntryRepository().create(this, serial, value);
+    public ReadingHistoryEntry upsertHistoryEntry(long serial, ReadingHistoryEntryValue value) {
+        var timestampBarrier = factory.getClock().instant().minus(factory.getTimeDifferenceTolerance());
+        return factory.getReadingHistoryEntryRepository().upsert(this, serial, value, timestampBarrier);
     }
 
     @Override

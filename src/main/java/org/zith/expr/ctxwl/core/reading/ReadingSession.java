@@ -10,7 +10,7 @@ public interface ReadingSession extends AutoCloseable {
 
     void complete(Instant timestamp);
 
-    ReadingHistoryEntry createHistoryEntry(long serial, ReadingHistoryEntryValue template);
+    ReadingHistoryEntry upsertHistoryEntry(long serial, ReadingHistoryEntryValue template);
 
     ReadingInspiredLookup createLookup(
             long historyEntrySerial,
