@@ -69,14 +69,42 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
     @Test
     public void testCreatingHistoryEntry() throws Exception {
         try (var session = readingService().makeSession("test", "wordlist")) {
-            session.createHistoryEntry(
+            var creationTimestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+            session.upsertHistoryEntry(
+                    0,
+                    new ReadingHistoryEntryValue(
+                            "http://example.com",
+                            Optional.empty(),
+                            Optional.of(creationTimestamp),
+                            Optional.empty(),
+                            Optional.empty()));
+            session.upsertHistoryEntry(
+                    0,
+                    new ReadingHistoryEntryValue(
+                            "http://example.com",
+                            Optional.empty(),
+                            Optional.of(creationTimestamp),
+                            Optional.empty(),
+                            Optional.empty()));
+
+            var updateTimestamp = creationTimestamp.plus(1, ChronoUnit.SECONDS);
+            session.upsertHistoryEntry(
                     0,
                     new ReadingHistoryEntryValue(
                             "http://example.com",
                             Optional.of("test content"),
-                            Optional.of(Instant.now()),
-                            Optional.empty(),
+                            Optional.of(creationTimestamp),
+                            Optional.of(updateTimestamp),
                             Optional.empty()));
+            session.upsertHistoryEntry(
+                    0,
+                    new ReadingHistoryEntryValue(
+                            "http://example.com",
+                            Optional.of("test content"),
+                            Optional.of(creationTimestamp),
+                            Optional.of(updateTimestamp),
+                            Optional.empty()));
+
             session.createLookup(
                     0,
                     0,
@@ -130,14 +158,79 @@ public class ReadingSessionFunctionalTests extends AbstractReadingServiceFunctio
     }
 
     @Test
+    public void testCreatingHistoryEntryAfterLookup() throws Exception {
+        try (var session = readingService().makeSession("test", "wordlist")) {
+            session.createLookup(
+                    0,
+                    0,
+                    new ReadingInspiredLookupValue(
+                            "content",
+                            Optional.of(5L),
+                            Optional.of(Instant.now())
+                    )
+            );
+
+            var creationTimestamp = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+            session.upsertHistoryEntry(
+                    0,
+                    new ReadingHistoryEntryValue(
+                            "http://example.com",
+                            Optional.of("test content"),
+                            Optional.of(creationTimestamp),
+                            Optional.empty(),
+                            Optional.empty()));
+        }
+
+        var completion = new CompletableFuture<Void>();
+        var data = new LinkedList<ReadingEvent>();
+        readingService().collect(ForkJoinPool.commonPool()).subscribe(new Flow.Subscriber<>() {
+
+            private Flow.Subscription subscription;
+
+            @Override
+            public void onSubscribe(Flow.Subscription subscription) {
+                this.subscription = subscription;
+                subscription.request(1);
+            }
+
+            @Override
+            public void onNext(Tracked<ReadingEvent> item) {
+                data.add(item.value());
+                item.acknowledge();
+                subscription.request(1);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                completion.completeExceptionally(throwable);
+            }
+
+            @Override
+            public void onComplete() {
+                completion.complete(null);
+            }
+        });
+
+        completion.get();
+
+        assertEquals(1, data.size());
+        assertTrue(data.getFirst() instanceof ReadingEvent.AddingReadingInspiredLookup);
+        var lookup = ((ReadingEvent.AddingReadingInspiredLookup) data.getFirst()).value();
+        assertEquals("content", lookup.criterion());
+        assertEquals(Optional.of(5L), lookup.offset());
+        assertEquals("test", lookup.session().getGroup());
+        assertEquals(Optional.of("test content"), lookup.historyEntry().orElseThrow().text());
+    }
+
+    @Test
     public void testWordlistInduction() throws ExecutionException, InterruptedException {
         try (var session = readingService().makeSession("test", "wordlist")) {
-            session.createHistoryEntry(
+            session.upsertHistoryEntry(
                     0,
                     new ReadingHistoryEntryValue(
                             "http://example.com",
                             Optional.of("It is better for you to eat an apple quickly"),
-                            Optional.of(Instant.now()),
+                            Optional.of(Instant.now().truncatedTo(ChronoUnit.MILLIS)),
                             Optional.empty(),
                             Optional.empty()));
             session.createLookup(

@@ -92,16 +92,7 @@ public class ReadingHistoryEntryImpl<Session extends ReadingSession> implements 
 
     @Override
     public void set(ReadingHistoryEntryValue value) {
-        new ReadingHistoryEntryDocument(
-                new ReadingSessionKeyDocument(session().getGroup(), session().getSerial()),
-                serial,
-                value.uri(),
-                value.text().orElse(null),
-                value.creationTime().orElse(null),
-                value.updateTime().orElse(null),
-                value.majorSerial().orElse(null),
-                true,
-                null); // TODO do update
+        throw new UnsupportedOperationException(); // TODO do update
     }
 
     @Override

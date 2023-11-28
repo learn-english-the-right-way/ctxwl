@@ -10,6 +10,7 @@ import org.zith.expr.ctxwl.core.reading.ReadingService;
 import org.zith.expr.ctxwl.webapi.authentication.Authenticated;
 import org.zith.expr.ctxwl.webapi.endpoint.readingsession.ReadingSessionResolver;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @Path("/reading_history_entry")
@@ -29,7 +30,7 @@ public class ReadingHistoryEntryWebCollection {
 
     @Path("{sessionGroup}-{sessionSerial}-{serial}")
     @PUT
-    public ReadingHistoryEntryWebDocument create(
+    public ReadingHistoryEntryWebDocument upsert(
             @PathParam("sessionGroup") String sessionGroup,
             @PathParam("sessionSerial") Long sessionSerial,
             @PathParam("serial") Long serial,
@@ -43,11 +44,17 @@ public class ReadingHistoryEntryWebCollection {
         if (document.creationTime().isEmpty()) {
             throw new ReadingHistoryException.FieldNotAcceptedException("creationTime");
         }
+        if (!document.creationTime().get().truncatedTo(ChronoUnit.MILLIS).equals(document.creationTime().get())) {
+            throw new ReadingHistoryException.FieldNotAcceptedException("creationTime");
+        }
+        if (!document.updateTime().map(t -> t.truncatedTo(ChronoUnit.MILLIS).equals(t)).orElse(true)) {
+            throw new ReadingHistoryException.FieldNotAcceptedException("updateTime");
+        }
 
         var readingSessionResolver = new ReadingSessionResolver(readingService, securityContext);
         ReadingHistoryEntry result;
         try (var readingSession = readingSessionResolver.resolve(sessionGroup, sessionSerial)) {
-            result = readingSession.createHistoryEntry(
+            result = readingSession.upsertHistoryEntry(
                     serial,
                     new ReadingHistoryEntryValue(
                             document.uri(),
